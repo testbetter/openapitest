@@ -1,0 +1,122 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "version": "1.0.0",
+        "title": "dummy test example"
+    },
+    "servers": [
+        {
+            "url": "http://dummy.restapiexample.com"
+        }
+    ],
+    "paths": {
+        "/employees": {
+            "get": {
+                "summary": "returns all employees",
+                "operationId": "get_employees",
+                "tags": [
+                    "employee"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Good to go"
+                    },
+                    "default": {
+                        "description": "Standard error response for unhandled exceptions",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "Error: SomeThing Wrong!\n  at module.exports (somefile.js:4:9)"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/employee/{id}": {
+            "get": {
+                "summary": "returns an employees",
+                "operationId": "get_employee_id",
+                "tags": [
+                    "employee"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Good to go"
+                    },
+                    "default": {
+                        "description": "Standard error response for unhandled exceptions",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "Error: SomeThing Wrong!\n  at module.exports (somefile.js:4:9)"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/create": {
+            "post": {
+                "summary": "returns an employees",
+                "operationId": "post_create",
+                "tags": [
+                    "employee"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "salary": {
+                                            "type": "number"
+                                        },
+                                        "age": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Good to go"
+                    },
+                    "default": {
+                        "description": "Standard error response for unhandled exceptions",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "Error: SomeThing Wrong!\n  at module.exports (somefile.js:4:9)"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

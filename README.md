@@ -9,7 +9,7 @@ The purpose of this openapitest framework is to simplify authoring, organizing, 
 ### Writing tests for your project
 ----
 See below example for one of several ways tests can be added and organized.
-The `test-integration` folder is where all YAML test suites, relevant resources like shared and test specific data are organized into sub-folders. The `shared-data` folder is optional, used only to store common configuration and test data that are used by more than one test suites. Test-suite specific data are stored next to test spec file. The test data file can be `.js` or `.yaml`.
+The `test-integration` folder is where all YAML test suites name with `.spec.yaml`, relevant resources like shared and test specific data are organized into sub-folders. The `shared-data` folder is optional, used only to store common configuration and test data that are used by more than one test suites. Test-suite specific data are stored next to test spec file. The test data file can be `.data.js` or `.data.yaml`. 
 
 ```
 ProjectCoolThing
@@ -65,6 +65,15 @@ Options:
 <br />
 
 # Documentation
+### File naming convention:
+--- 
+**Test spec file name:** should be ending with `.spec.yaml`. 
+
+Example: `user.spec.yaml`
+
+**Test data file name:** should be ending with `.data.yaml` or `.data.js`. 
+
+Example: `login.data.yaml`
 
 ### Tags:
 ----
@@ -364,7 +373,7 @@ tests:
 ```
 
 <br /><br />
-## `Full Example:`
+## `Full Example: user.spec.yaml`
 ```sh
 apiCalls:
   name: login to the system

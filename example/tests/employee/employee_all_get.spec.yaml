@@ -1,0 +1,41 @@
+apiCalls:
+  name: Employees testing
+  swagger:
+  # get all employees endpoint: /employees
+  - name : get all employees
+    call : get_employees
+    expect:
+      status: 200
+      json:
+        - 0.id: to.be 20970
+        - 0.employee_name: to.be Danni
+        - 0.employee_salary: to.be 0
+        - 0.employee_age: to.be 0
+    save:
+      employeeId: json.0.id
+       
+# get endpoint: /employee/{id}
+  - name : get an employee
+    call : get_employee_id
+    parameters:
+      id: ${employeeId}
+    expect:
+      status: 200
+      json:
+        - id: to.be 20970
+        - employee_name: to.be Danni
+        - employee_salary: to.be 0
+        - employee_age: to.be 0      
+
+# post endpoint: /create
+  - name : add an employee
+    call : post_create
+    data:
+      $file: employee
+    expect:
+      status: 200
+      json:
+        - name: to.contain test
+        - salary: to.be 123
+        - age: to.be 23
+        - id: to.be.a string 
