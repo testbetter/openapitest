@@ -175,12 +175,12 @@ data:
 data:
    $file: login
 ```
-**`YAML base:`** `example: login.yaml`
+**`YAML base:`** `example: login.data.yaml`
 ```sh
 email: test@localhost.com
 password: "123"
 ```
-**`JS base:`** `example: login.js`
+**`JS base:`** `example: login.data.js`
 ```sh
 module.exports = {
   "email": "test@localhost.com",
@@ -205,14 +205,14 @@ basicAuth:
    $file: basicAuth
 ```
 
-**`YAML base:`** `example: basicAuth.yaml`
+**`YAML base:`** `example: basicAuth.data.yaml`
 ```sh
 basicAuth:
    email: test@localhost.com
    password: "123"
 ```
 
-**`JS base:`** `example: basicAuth.js`
+**`JS base:`** `example: basicAuth.data.js`
 ```sh
 module.exports = {
   "email": "test@localhost.com",
