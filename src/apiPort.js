@@ -181,7 +181,7 @@ class ApiPort {
       }
 
       if (!this.apiPort.$file[fileName]) {
-        throw new Error(`Cannot find test data file: ${fileName}.(js|yaml) in any of: ${lookIn}`)
+        throw new Error(`Cannot find test data file: ${fileName}.data.(js|yaml) in any of: ${lookIn}`)
       }
     }
 
