@@ -17,7 +17,8 @@ if (apiPort.get('API_TESTS_PATH')) {
             if (filePath.match(/spec\.yaml$/)) {
                 const config = YAML.load(filePath)
                 describe(filePath, function() {
-                    describe((config.apiCalls || {}).name || 'unnamed', function test() {
+                    const describeMethod = config.only ? describe.only : describe;
+                    describeMethod((config.apiCalls || {}).name || 'unnamed', function test() {
                         if (!(config.apiCalls || {}).name) {
                             it('suite should have a name', function() {
                                 assert.fail()

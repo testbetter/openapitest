@@ -91,6 +91,7 @@ Example: `login.data.yaml`
 			* [$file](#basicAuthFile)
 		* [save](#save)
 		* [print](#print)
+		* [only](#only)
 		* [expect](#expect)
 			* [json](#expect)
 			* [headers](#expect)
@@ -225,6 +226,13 @@ module.exports = {
 If we want to print the response or error then we can do that by using `print` tag. Example:
 ```sh
 print: 1
+```
+<br />
+
+**<a name='only'>`only:`</a>**
+If we want to run only a subset of tests by using `only` tag. Example:
+```sh
+only: true
 ```
 <br />
 
