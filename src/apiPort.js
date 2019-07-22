@@ -45,17 +45,20 @@ class ApiPort {
     apis.servers[0] = { url: this.get('API_SERVER_URL') }
 
     for (const path of Object.keys(apis.paths)) {
-      let params = apis.paths[path].parameters || []
+      const params = apis.paths[path].parameters || []
       for (const action of Object.keys(apis.paths[path])) {
-        if (apis.paths[path][action].operationId) {
-          operations[apis.paths[path][action].operationId] = apis.paths[path][action]
-          operations[apis.paths[path][action].operationId].path = path
-          operations[apis.paths[path][action].operationId].method = action
-          operations[apis.paths[path][action].operationId].parameters = _.unionBy(
-            apis.paths[path][action].parameters,
+        const actionObj = apis.paths[path][action];
+        const operationId = actionObj.operationId
+        if (operationId) {
+          const operation = apis.paths[path][action]
+          operation.path = path
+          operation.method = action
+          operation.parameters = _.unionBy(
+            actionObj.parameters,
             params,
             'name'
           )
+          operations[actionObj.operationId] = operation;
         }
       }
     }

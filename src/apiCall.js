@@ -31,7 +31,8 @@ module.exports = function apiCall(file, apiPort) {
   }
 
   config.apiCalls.swagger.forEach(req => {
-    it(req.name || req.call, async function () {
+    const itMethod = req.only ? it.only : it;
+    itMethod(req.name || req.call, async function () {
       this.timeout(apiPort.get('TIMEOUT'))
 
       if (!operationIds[req.call]) {
