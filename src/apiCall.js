@@ -65,6 +65,7 @@ module.exports = function apiCall(file, apiPort) {
       }
 
       const isResPrint = req.print || false
+      const save = req.save || {}
 
       try {
         const res = await SuperClient(apiPort, req, operations[req.call], allReqData, basicAuth)
@@ -98,7 +99,6 @@ module.exports = function apiCall(file, apiPort) {
           }
         }
 
-        const save = req.save || {}
         for (const varName of Object.keys(save)) {
           if (typeof save[varName] === 'object') {
             let savedValue = evaluateResponseData(res, save[varName])
@@ -124,6 +124,14 @@ module.exports = function apiCall(file, apiPort) {
       } catch (err) {
         if (isResPrint) {
           varDump('Error= ', err, true)
+        }
+        for (const varName of Object.keys(save)) {
+          if (save[varName].startsWith('$file.')) {
+            apiPort.set(varName, apiPort.resolve(save[varName]))
+            if (isResPrint) {
+              console.log(varName + ' = ', JSON.stringify(apiPort.resolve(save[varName])))
+            }
+          } 
         }
         if ((req.expect || {}).status && err.status) {
           apiPort.expectStatus(req.expect.status, err.status)
