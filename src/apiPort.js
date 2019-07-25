@@ -162,10 +162,10 @@ class ApiPort {
     return obj
   }
 
-  getDataFromFile(fileAndKeyName) {
+  getDataFromFile(fileAndKeyName, file = "") {
     this.apiPort.$file = this.apiPort.$file || {}
 
-    const filePath = path.parse(this.currentFile).dir
+    const filePath = path.parse(file).dir
     const parts = fileAndKeyName.split('.')
     const fileName = parts[0]
     const objPath = _.join(parts.slice(1), '.')

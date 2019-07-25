@@ -48,7 +48,7 @@ module.exports = function apiCall(file, apiPort) {
       let reqData = req.data || {}
       let basicAuth = req.basicAuth || {}
       if (basicAuth.$file) {
-        basicAuth = apiPort.getDataFromFile(basicAuth.$file)
+        basicAuth = apiPort.getDataFromFile(basicAuth.$file, file)
         basicAuth = apiPort.resolveObject(basicAuth)
         delete basicAuth.$file
       }
@@ -57,7 +57,7 @@ module.exports = function apiCall(file, apiPort) {
       let query = apiPort.resolveObject(req.query)
 
       if (reqData.$file) {
-        let reqDataFile = apiPort.getDataFromFile(reqData.$file)
+        let reqDataFile = apiPort.getDataFromFile(reqData.$file, file)
         allReqData = apiPort.resolveObject(reqDataFile)
         delete reqData.$file
       } else {

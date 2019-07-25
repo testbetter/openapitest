@@ -13,6 +13,7 @@ if (apiPort.get('API_TESTS_PATH')) {
     if (paths) {
         paths.forEach(file => {
             const filePath = file.path
+            apiPort.currentFile = ""
             if (filePath.match(/spec\.yaml$/)) {
                 apiPort.currentFile = filePath
                 const config = YAML.load(filePath)
