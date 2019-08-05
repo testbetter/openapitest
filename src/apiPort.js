@@ -22,6 +22,7 @@ class ApiPort {
 
     let openApiPath = ''
     if (process.env.OPENAPI_PATH) {
+      console.log(process.env.OPENAPI_PATH)
       openApiPath = this.getAbsolutePath(process.env.OPENAPI_PATH)
     }
     this.set('OPENAPI_PATH', openApiPath || getLocalDir('integration/api-docs.json'))
@@ -175,7 +176,9 @@ class ApiPort {
 
       for (const testDataPath of lookIn) {
         if (testDataPath) {
-          const fileData = loadFile(`${testDataPath}/${fileName}.data`)
+          const fileName = `${testDataPath}/${fileName}.data`;
+          console.log(fileName);
+          const fileData = loadFile(fileName)
           if (fileData) {
             this.apiPort.$file[fileName] = fileData
             break
