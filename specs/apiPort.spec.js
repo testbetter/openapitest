@@ -13,7 +13,6 @@ describe('apiPort', () => {
             const apiPort = new ApiPort();
             apiPort.init();
             const data = apiPort.getDataFromFile('fixture');
-            console.log(data);
             expect(data).to.deep.equal({
                 test: 'This is a test'
             })

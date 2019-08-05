@@ -176,7 +176,6 @@ class ApiPort {
       for (const testDataPath of lookIn) {
         if (testDataPath) {
           const filePath = `${testDataPath}/${fileName}.data`;
-          console.log(filePath);
           const fileData = loadFile(filePath)
           if (fileData) {
             this.apiPort.$file[fileName] = fileData
