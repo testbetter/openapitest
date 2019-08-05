@@ -156,9 +156,13 @@ class ApiPort {
 
   resolveObject(obj = {}) {
     for (const key of Object.keys(obj)) {
-      obj[key] = this.resolve(obj[key])
+      const value = obj[key];
+      if (_.isObject(value)) {
+       obj[key] = this.resolveObject(value)
+      } else {
+       obj[key] = this.resolve(value)
+      }
     }
-
     return obj
   }
 
