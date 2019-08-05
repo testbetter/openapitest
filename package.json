@@ -21,6 +21,7 @@
   "author": "Test Better",
   "license": "MIT",
   "dependencies": {
+    "chai": "^4.2.0",
     "colors": "^1.3.3",
     "commander": "^2.19.0",
     "expect.js": "^0.3.1",
