@@ -18,6 +18,7 @@ describe('apiPort', () => {
       const data = apiPort.getDataFromFile('fixture')
       expect(data).to.deep.equal({
         test: 'This is a test',
+        value: 123,
       })
     })
   })

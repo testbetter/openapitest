@@ -2,9 +2,9 @@ const _ = require('lodash')
 const objectPath = require('object-path')
 const expect = require('expect.js')
 const fs = require('fs')
-const YAML = require('js-yaml')
 const path = require('path')
 const klawSync = require('klaw-sync')
+const { loadYamlFile } = require('./util.js')
 
 const currentDir = process.cwd()
 
@@ -24,7 +24,7 @@ function loadFile(filePath) {
   if (fs.existsSync(`${filePath}.js`)) {
     return require(`${filePath}.js`)
   } if (fs.existsSync(`${filePath}.yaml`)) {
-    return YAML.load(fs.readFileSync(`${filePath}.yaml`), 'uft8')
+    return loadYamlFile(`${filePath}.yaml`)
   }
 }
 

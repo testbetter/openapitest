@@ -1,5 +1,5 @@
 const _ = require('lodash')
-const YAML = require('yamljs')
+const { loadYamlFile } = require('./util.js')
 const objectPath = require('object-path')
 const SuperClient = require('./superClient')
 
@@ -144,7 +144,7 @@ module.exports = function apiCall(file, apiPort) {
 }
 
 function init(file) {
-  const fileContent = YAML.load(file)
+  const fileContent = loadYamlFile(file)
 
   fileContent.apiCalls = fileContent.apiCalls || {}
   fileContent.apiCalls.swagger = fileContent.apiCalls.swagger || []
