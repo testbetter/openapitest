@@ -4,6 +4,7 @@ const expect = require('expect.js')
 const fs = require('fs')
 const YAML = require('js-yaml')
 const path = require('path')
+const klawSync = require('klaw-sync')
 
 const currentDir = process.cwd()
 
@@ -52,6 +53,7 @@ class ApiPort {
   constructor() {
     this.apiPort = {}
     this.currentFile = ''
+    this.globalDataConfig = []
   }
 
   init() {
@@ -60,6 +62,21 @@ class ApiPort {
     this.set('API_SERVER_URL', process.env.API_SERVER_URL)
 
     this.set('API_TESTS_PATH', process.env.API_TESTS_PATH || getLocalDir('integration/test-spec'))
+    this.set('GLOBAL_DATA_CONFIG', process.env.GLOBAL_DATA_CONFIG, false)
+
+    if (process.env.GLOBAL_DATA_CONFIG) {
+      const globalDataConfigFolderPath = this.getAbsolutePath(process.env.GLOBAL_DATA_CONFIG)
+      const globalDataConfigFolderPaths = klawSync(globalDataConfigFolderPath, { nodir: true })
+      globalDataConfigFolderPaths.forEach((file) => {
+        const filePath = file.path
+        let fileName = path.basename(filePath, path.extname(filePath));
+        fileName = fileName.replace('.config', '')
+        const fileData = loadFile(filePath, true)
+        if (fileData) {
+          this.globalDataConfig[fileName] = fileData
+        }
+      })
+    }
 
     let openApiPath = ''
     if (process.env.OPENAPI_PATH) {
@@ -167,6 +184,13 @@ class ApiPort {
     if (valueStr.startsWith('$file.')) {
       return this.getDataFromFile(valueStr.substring('$file.'.length))
     }
+    if (valueStr.startsWith('$config.')) {
+      const fileAndKeyName = valueStr.substring('$config.'.length)
+      const parts = fileAndKeyName.split('.')
+      const fileName = parts.length > 0 ? parts[0] : ''
+      const keyName = parts.length > 0 ? parts[1] : ''
+      return fileName && keyName ? this.globalDataConfig[fileName][keyName] : ''
+    }
 
     const matches = valueStr.match(/\${[^.][^}]+}/g)
 
@@ -197,9 +221,13 @@ class ApiPort {
 
   resolveObject(obj = {}) {
     for (const key of Object.keys(obj)) {
-      obj[key] = this.resolve(obj[key])
+      const value = obj[key];
+      if (_.isObject(value)) {
+        obj[key] = this.resolveObject(value)
+      } else {
+        obj[key] = this.resolve(value)
+      }
     }
-
     return obj
   }
 
@@ -279,7 +307,5 @@ class ApiPort {
     eval(`expect(actualVal).${op}(resolvedValue)`)
   }
 }
-
-
 
 module.exports = ApiPort
