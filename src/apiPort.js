@@ -2,10 +2,51 @@ const _ = require('lodash')
 const objectPath = require('object-path')
 const expect = require('expect.js')
 const fs = require('fs')
-const YAML = require('yamljs')
+const YAML = require('js-yaml')
 const path = require('path')
 
 const currentDir = process.cwd()
+
+
+function getLocalDir(dir, required = true) {
+  const localDir = path.join(currentDir, dir)
+  if (!fs.existsSync(localDir)) {
+    if (required) {
+      throw new Error(`local directory ${dir} is required for integration testing.`)
+    }
+    return undefined
+  }
+  return localDir
+}
+
+function loadFile(filePath) {
+  if (fs.existsSync(`${filePath}.js`)) {
+    return require(`${filePath}.js`)
+  } if (fs.existsSync(`${filePath}.yaml`)) {
+    return YAML.load(fs.readFileSync(`${filePath}.yaml`), 'uft8')
+  }
+}
+
+function parseOpValue(expectationValue) {
+  if (typeof expectationValue !== 'string' || !expectationValue.startsWith('to.')) {
+    return {
+      op: 'to.be.equal',
+      value: expectationValue,
+    }
+  }
+
+  // split the string on spaces
+  const parts = expectationValue.split(' ')
+  const ret = {
+    op: parts[0],
+  }
+
+  if (parts.length > 1) {
+    ret.value = expectationValue.substring(ret.op.length).trim()
+  }
+
+  return ret
+}
 
 class ApiPort {
   constructor() {
@@ -47,8 +88,8 @@ class ApiPort {
     for (const path of Object.keys(apis.paths)) {
       const params = apis.paths[path].parameters || []
       for (const action of Object.keys(apis.paths[path])) {
-        const actionObj = apis.paths[path][action];
-        const operationId = actionObj.operationId
+        const actionObj = apis.paths[path][action]
+        const { operationId } = actionObj
         if (operationId) {
           const operation = apis.paths[path][action]
           operation.path = path
@@ -56,9 +97,9 @@ class ApiPort {
           operation.parameters = _.unionBy(
             actionObj.parameters,
             params,
-            'name'
+            'name',
           )
-          operations[actionObj.operationId] = operation;
+          operations[actionObj.operationId] = operation
         }
       }
     }
@@ -68,7 +109,7 @@ class ApiPort {
   }
 
   getAbsolutePath(envPath) {
-    let cd = process.env.CD
+    const cd = process.env.CD
     return path.isAbsolute(envPath) ? envPath : path.join(cd, envPath)
   }
 
@@ -106,7 +147,7 @@ class ApiPort {
     let exists = true
 
     if (matches) {
-      matches.forEach(match => {
+      matches.forEach((match) => {
         const repl = objectPath.get(this.apiPort, match.substring(2, match.length - 1))
 
         if (typeof repl === 'undefined') {
@@ -134,8 +175,8 @@ class ApiPort {
     }
 
     for (const match of matches) {
-      let tokenVar = match.substring(2, match.length - 1)
-      let replaceStr = objectPath.get(this.apiPort, tokenVar)
+      const tokenVar = match.substring(2, match.length - 1)
+      const replaceStr = objectPath.get(this.apiPort, tokenVar)
       if (!replaceStr) {
         throw new Error(`${tokenVar} not found.`)
       }
@@ -162,7 +203,7 @@ class ApiPort {
     return obj
   }
 
-  getDataFromFile(fileAndKeyName, file = "") {
+  getDataFromFile(fileAndKeyName, file = '') {
     this.apiPort.$file = this.apiPort.$file || {}
 
     const filePath = path.parse(file).dir
@@ -175,7 +216,7 @@ class ApiPort {
 
       for (const testDataPath of lookIn) {
         if (testDataPath) {
-          const filePath = `${testDataPath}/${fileName}.data`;
+          const filePath = `${testDataPath}/${fileName}.data`
           const fileData = loadFile(filePath)
           if (fileData) {
             this.apiPort.$file[fileName] = fileData
@@ -203,7 +244,7 @@ class ApiPort {
       }
     }
 
-    let foundIndex = _.findIndex(allParams, { in: 'path', required: true })
+    const foundIndex = _.findIndex(allParams, { in: 'path', required: true })
     if (allParams && foundIndex !== -1) {
       throw new Error(`Parameter '${allParams.foundIndex.name}' is required`)
     }
@@ -239,44 +280,6 @@ class ApiPort {
   }
 }
 
+
+
 module.exports = ApiPort
-
-function getLocalDir(dir, required = true) {
-  const localDir = path.join(currentDir, dir)
-  if (!fs.existsSync(localDir)) {
-    if (required) {
-      throw new Error(`local directory ${dir} is required for integration testing.`)
-    }
-    return undefined
-  }
-  return localDir
-}
-
-function loadFile(filePath) {
-  if (fs.existsSync(`${filePath}.js`)) {
-    return require(`${filePath}.js`)
-  } else if (fs.existsSync(`${filePath}.yaml`)) {
-    return YAML.load(`${filePath}.yaml`)
-  }
-}
-
-function parseOpValue(expectationValue) {
-  if (typeof expectationValue !== 'string' || !expectationValue.startsWith('to.')) {
-    return {
-      op: 'to.be.equal',
-      value: expectationValue
-    }
-  }
-
-  // split the string on spaces
-  const parts = expectationValue.split(' ')
-  const ret = {
-    op: parts[0]
-  }
-
-  if (parts.length > 1) {
-    ret.value = expectationValue.substring(ret.op.length).trim()
-  }
-
-  return ret
-}

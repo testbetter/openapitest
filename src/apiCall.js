@@ -23,14 +23,14 @@ module.exports = function apiCall(file, apiPort) {
       operationIds[details.operationId] = Object.assign({}, remainingSpec, {
         paths: {
           [route]: {
-            [action]: details
-          }
-        }
+            [action]: details,
+          },
+        },
       })
     }
   }
 
-  config.apiCalls.swagger.forEach(req => {
+  config.apiCalls.swagger.forEach((req) => {
     const itMethod = req.only ? it.only : it;
     itMethod(req.name || req.call, async function () {
       this.timeout(apiPort.get('TIMEOUT'))
@@ -39,13 +39,13 @@ module.exports = function apiCall(file, apiPort) {
         throw new Error(`No swagger operation exists with operationId "${req.call}"`)
       }
 
-      let params = req.parameters || ''
+      const params = req.parameters || ''
       if (params) {
         apiPort.validateParams(operations[req.call].parameters || [], params)
       }
 
       let allReqData = {}
-      let reqData = req.data || {}
+      const reqData = req.data || {}
       let basicAuth = req.basicAuth || {}
       if (basicAuth.$file) {
         basicAuth = apiPort.getDataFromFile(basicAuth.$file, file)
@@ -54,10 +54,10 @@ module.exports = function apiCall(file, apiPort) {
       }
 
       req.header = apiPort.resolveObject(req.header)
-      let query = apiPort.resolveObject(req.query)
+      const query = apiPort.resolveObject(req.query)
 
       if (reqData.$file) {
-        let reqDataFile = apiPort.getDataFromFile(reqData.$file, file)
+        const reqDataFile = apiPort.getDataFromFile(reqData.$file, file)
         allReqData = apiPort.resolveObject(reqDataFile)
         delete reqData.$file
       } else {
@@ -101,23 +101,21 @@ module.exports = function apiCall(file, apiPort) {
 
         for (const varName of Object.keys(save)) {
           if (typeof save[varName] === 'object') {
-            let savedValue = evaluateResponseData(res, save[varName])
+            const savedValue = evaluateResponseData(res, save[varName])
             apiPort.set(varName, savedValue)
             if (isResPrint) {
-              console.log(varName + ' = ', JSON.stringify(savedValue))
+              console.log(`${varName} = `, JSON.stringify(savedValue))
+            }
+          } else if (save[varName].startsWith('$file.')) {
+            apiPort.set(varName, apiPort.resolve(save[varName]))
+            if (isResPrint) {
+              console.log(`${varName} = `, JSON.stringify(apiPort.resolve(save[varName])))
             }
           } else {
-            if (save[varName].startsWith('$file.')) {
-              apiPort.set(varName, apiPort.resolve(save[varName]))
-              if (isResPrint) {
-                console.log(varName + ' = ', JSON.stringify(apiPort.resolve(save[varName])))
-              }
-            } else {
-              let value = getValueFromResponse(res, save[varName])
-              apiPort.set(varName, value, false)
-              if (isResPrint) {
-                console.log(varName + ' = ', JSON.stringify(value))
-              }
+            const value = getValueFromResponse(res, save[varName])
+            apiPort.set(varName, value, false)
+            if (isResPrint) {
+              console.log(`${varName} = `, JSON.stringify(value))
             }
           }
         }
@@ -129,9 +127,9 @@ module.exports = function apiCall(file, apiPort) {
           if (typeof save[varName] !== 'object' && save[varName].startsWith('$file.')) {
             apiPort.set(varName, apiPort.resolve(save[varName]))
             if (isResPrint) {
-              console.log(varName + ' = ', JSON.stringify(apiPort.resolve(save[varName])))
+              console.log(`${varName} = `, JSON.stringify(apiPort.resolve(save[varName])))
             }
-          } 
+          }
         }
         if ((req.expect || {}).status && err.status) {
           apiPort.expectStatus(req.expect.status, err.status)
@@ -155,28 +153,28 @@ function init(file) {
 }
 
 function evaluateResponseData(res, save) {
-  let keys = Object.keys(save)
+  const keys = Object.keys(save)
   if (keys.length > 1) {
     throw new Error(`Multiple keys do not support. '${JSON.stringify(save)}'`)
   }
 
-  let keyName = keys[0]
+  const keyName = keys[0]
   if (save[keyName].startsWith('$regex')) {
-    let value = getValueFromResponse(res, keyName)
+    const value = getValueFromResponse(res, keyName)
     if (!value) {
       throw new Error(`Wrong key '${keyName}'`)
     }
     const parts = save[keyName].split(' ')
     if (parts.length === 2) {
-      let matchedValue = value.match(parts[1])
+      const matchedValue = value.match(parts[1])
       if (matchedValue) {
         if (matchedValue.length === 1) {
           return matchedValue[0]
-        } else if (matchedValue.length === 2) {
+        } if (matchedValue.length === 2) {
           return matchedValue[1]
         }
         throw new Error(
-          `Found multiple values '${matchedValue}' using regular expression '${parts[1]}'`
+          `Found multiple values '${matchedValue}' using regular expression '${parts[1]}'`,
         )
       }
       throw new Error(`Did not parse from value '${value}' using regular expression '${parts[1]}'`)
@@ -214,8 +212,8 @@ function verifyExpectStructure(callExpects) {
   if (unknownKeys.length > 0) {
     throw new Error(
       `Only certain expectations are processed - unknown ones have been detected: ${_.join(
-        unknownKeys
-      )}`
+        unknownKeys,
+      )}`,
     )
   }
   // now make sure the processed keys are what we exepct

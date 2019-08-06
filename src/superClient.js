@@ -7,9 +7,9 @@ module.exports = async function (state, req, operation, data, basicAuth) {
     throw new Error(`Invalid method: ${operation.method}`)
   }
 
-  let path = operation.path
+  let { path } = operation
   if (req.parameters) {
-    _.forEach(req.parameters, function (value, key) {
+    _.forEach(req.parameters, (value, key) => {
       path = _.replace(path, `{${key}}`, state.resolve(value))
     })
   }

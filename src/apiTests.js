@@ -5,7 +5,7 @@ module.exports = function tests(file, apiPort) {
 
   config.tests.forEach((test, index) => {
     if (!test.name) {
-      it(`Test #${index + 1} in ${file}`, function () {
+      it(`Test #${index + 1} in ${file}`, () => {
         throw new Error('Tests must have a name.')
       })
       return
@@ -15,7 +15,7 @@ module.exports = function tests(file, apiPort) {
       if (!test.expects) {
         throw new Error('Test must have at least one expect statement')
       }
-      
+
       for (const expect of test.expects) {
         apiPort.expectationOn(apiPort.apiPort, expect)
       }
