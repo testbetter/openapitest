@@ -4,6 +4,7 @@ const expect = require('expect.js')
 const fs = require('fs')
 const YAML = require('yamljs')
 const path = require('path')
+const klawSync = require('klaw-sync')
 
 const currentDir = process.cwd()
 
@@ -11,6 +12,7 @@ class ApiPort {
   constructor() {
     this.apiPort = {}
     this.currentFile = ''
+    this.globalDataConfig = []
   }
 
   init() {
@@ -19,6 +21,21 @@ class ApiPort {
     this.set('API_SERVER_URL', process.env.API_SERVER_URL)
 
     this.set('API_TESTS_PATH', process.env.API_TESTS_PATH || getLocalDir('integration/test-spec'))
+    this.set('GLOBAL_DATA_CONFIG', process.env.GLOBAL_DATA_CONFIG, false)
+    
+    if (process.env.GLOBAL_DATA_CONFIG) {
+      const globalDataConfigFolderPath = this.getAbsolutePath(process.env.GLOBAL_DATA_CONFIG)
+      let globalDataConfigFolderPaths = klawSync(globalDataConfigFolderPath, { nodir: true })
+      globalDataConfigFolderPaths.forEach(file => {
+        const filePath = file.path
+        let fileName = path.basename(filePath, path.extname(filePath));
+        fileName = fileName.replace(".config", "")
+        const fileData = loadFile(filePath, true)
+        if (fileData) {
+          this.globalDataConfig[fileName] = fileData
+        }
+      })
+    }
 
     let openApiPath = ''
     if (process.env.OPENAPI_PATH) {
@@ -125,6 +142,13 @@ class ApiPort {
     let valueStr = `${value}`
     if (valueStr.startsWith('$file.')) {
       return this.getDataFromFile(valueStr.substring('$file.'.length))
+    }
+    if (valueStr.startsWith('$config.')) {
+      const fileAndKeyName = valueStr.substring('$config.'.length)
+      const parts = fileAndKeyName.split('.')
+      const fileName = parts.length > 0 ? parts[0] : ""
+      const keyName = parts.length > 0 ? parts[1] : ""
+      return fileName && keyName ? this.globalDataConfig[fileName][keyName] : ""
     }
 
     const matches = valueStr.match(/\${[^.][^}]+}/g)
@@ -255,11 +279,15 @@ function getLocalDir(dir, required = true) {
   return localDir
 }
 
-function loadFile(filePath) {
+function loadFile(filePath, hasExt = false) {
   if (fs.existsSync(`${filePath}.js`)) {
     return require(`${filePath}.js`)
   } else if (fs.existsSync(`${filePath}.yaml`)) {
     return YAML.load(`${filePath}.yaml`)
+  } else if (hasExt && path.extname(filePath) === '.js') {
+    return require(`${filePath}`)
+  } else if (hasExt && path.extname(filePath) === '.yaml') {
+    return YAML.load(`${filePath}`)
   }
 }
 

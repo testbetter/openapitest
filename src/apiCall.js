@@ -126,7 +126,7 @@ module.exports = function apiCall(file, apiPort) {
           varDump('Error= ', err, true)
         }
         for (const varName of Object.keys(save)) {
-          if (typeof save[varName] !== 'object' && save[varName].startsWith('$file.')) {
+          if (typeof save[varName] !== 'object' && (save[varName].startsWith('$file.') || save[varName].startsWith('$config.'))) {
             apiPort.set(varName, apiPort.resolve(save[varName]))
             if (isResPrint) {
               console.log(varName + ' = ', JSON.stringify(apiPort.resolve(save[varName])))

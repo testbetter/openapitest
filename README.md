@@ -14,7 +14,10 @@ The `test-integration` folder is where all YAML test suites name with `.spec.yam
 ```
 ProjectCoolThing
 ├─ test-integration
-   ├─ shared-data
+   ├─ global-config
+   |   ├─ global.config.js
+   |   └─ testenvironment.config.yaml
+   ├─ global-data
    |   ├─ testusers.data.js
    |   └─ testenvironment.data.yaml
    └─ test-suites
@@ -23,7 +26,6 @@ ProjectCoolThing
        |   ├─ coolTest1.data.yaml
        |   ├─ coolTest2.spec.yaml
        |   ├─ coolTest2.data.js
-       |   └─ coolTest2.util.js
        ├─ cool-features-group2
            ├─ coolTestg2.spec.yml
            └─ coolTestg2.data.yaml
@@ -53,13 +55,14 @@ The test results are are saved to the root directory by default.
 openapitest --help
 
 Options:
-  -V, --version          Output the version number
-  -o, --openapi  [path]  Open API relative/ absolute path. e.g: <path>/openapi.json
-  -t, --testDir  [path]  Test folder relative/ absolute path.  e.g: <path>/test-spec
-  -d, --dataDir  [path]  Test data folder. Defaults to a folder called "data" that is a sibling to the test-suites folder
-  -s, --sharedir [path]  Shared Test data folder relative/ absolute path.  e.g: <path>/share_data
-  -u, --url [url]        Server URL. e.g: http://localhost:9000
-  -h, --help             output usage information
+  -V, --version            Output the version number
+  -o, --openapi  [path]    Open API relative/ absolute path. e.g: <path>/openapi.json
+  -t, --testDir  [path]    Test folder relative/ absolute path.  e.g: <path>/test-spec
+  -d, --dataDir  [path]    Test data folder. Defaults to a folder called "data" that is a sibling to the test-suites folder
+  -s, --sharedir [path]    Shared Test data folder relative/ absolute path.  e.g: <path>/share_data
+  -c, --dataConfig [path]  Global Test data config folder relative/ absolute path.  e.g: <path>/global-config
+  -u, --url [url]          Server URL. e.g: http://localhost:9000
+  -h, --help               output usage information
 ```
 
 <br />
@@ -140,6 +143,7 @@ We can define parameter under the `parameters` tag. There is no file support her
 parameters: 	
     userId: 123456
     otherId: ${otherId}
+    other: $config.global.other
 ```
 <br />
 
@@ -150,6 +154,7 @@ If we need to send any header information during the endpoint call, we can defin
 header:
   Accept: application/json
   Authorization: Bearer sessionToken
+  other: $config.global.other
 ```
 <br />
 
@@ -159,6 +164,7 @@ We can define query/ get value under `query` tag. There is no file support here.
 query:
   id: 1212
   otherId: 1234
+  other: $config.global.other
 ```
 <br />
 
@@ -170,6 +176,7 @@ query:
 data:
   email: test@localhost.com
   password: "123"
+  other: $config.global.other
 ```
 **<a name='dataFile'>`file example:`**</a>
 ```sh
@@ -198,6 +205,7 @@ We can define the basic auth information here. We can set basic auth with 2 form
 basicAuth:
    email: test@localhost.com
    password: "123"
+   other: $config.global.other
 ```
 
 **<a name='basicAuthFile'>`file example:`</a>**
@@ -242,6 +250,7 @@ After calling the endpoint, If we want to save response for next endpoint or for
 ```sh
 save:
    sessionToken: json.sessionToken
+   other: $config.global.other
 ```
 
 Example: Returning full response
@@ -250,10 +259,11 @@ save:
    userResponse: json
 ```
 
-We can save value from file as well. Example: save `username` from `basicAuth` file.
+We can save value from file as well. Example: save `username` from `basicAuth` file. From `global-config` folder. File name will be `global.config.(js/yaml)`
 ```sh
 save:
    username: $file.basicAuth.email
+   other: $config.global.other
 ```
 We can parse any value from response using `regular expression`.
 

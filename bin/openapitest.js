@@ -5,13 +5,6 @@ const program = require('commander')
 const Mocha = require('mocha')
 const path = require('path')
 const colors = require('colors')
-const shell = require("shelljs");
-
-console.log(process.cwd())
-
-
-//shell.exec("node ./src/index.js")
-
 
 program
     .version('0.1.0')
@@ -28,6 +21,10 @@ program
         '-s, --sharedir [path]',
         'Common Test data folder relative/ absolute path.  e.g: <path>/integration/test-spec'
     )
+    .option(
+        '-c, --dataConfig [path]',
+        'Global Test data config folder relative/ absolute path.  e.g: <path>/global-config'
+    )
     .option('-u, --url [url]', 'Server URL. e.g: http://localhost:9000')
 
 program.parse(process.argv)
@@ -43,6 +40,7 @@ checkRequired(program, 'url')
 
 process.env.OPENAPI_PATH = program.openapi
 process.env.API_TESTS_PATH = program.testDir
+process.env.GLOBAL_DATA_CONFIG = program.dataConfig
 
 if (program.dataDir) {
     checkExists(program.dataDir, 'Data directory')
