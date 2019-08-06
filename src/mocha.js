@@ -1,4 +1,4 @@
-const YAML = require('yamljs')
+const { loadYamlFile } = require('./util.js')
 const assert = require('assert')
 const klawSync = require('klaw-sync')
 const ApiPort = require('./apiPort')
@@ -16,7 +16,7 @@ if (apiPort.get('API_TESTS_PATH')) {
       apiPort.currentFile = ''
       if (filePath.match(/spec\.yaml$/)) {
         apiPort.currentFile = filePath
-        const config = YAML.load(filePath)
+        const config = loadYamlFile(filePath)
         describe(filePath, () => {
           const describeMethod = config.only ? describe.only : describe;
           describeMethod((config.apiCalls || {}).name || 'unnamed', function test() {

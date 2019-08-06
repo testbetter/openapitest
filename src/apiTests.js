@@ -1,4 +1,4 @@
-const YAML = require('yamljs')
+const { loadYamlFile } = require('./util.js')
 
 module.exports = function tests(file, apiPort) {
   const config = init(file)
@@ -24,7 +24,7 @@ module.exports = function tests(file, apiPort) {
 }
 
 function init(file) {
-  const fileContent = YAML.load(file)
+  const fileContent = loadYamlFile(file)
 
   fileContent.apiCalls = fileContent.apiCalls || {}
   fileContent.tests = fileContent.tests || []
