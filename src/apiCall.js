@@ -1,10 +1,25 @@
 const _ = require('lodash')
 const objectPath = require('object-path')
+const { expect } = require('chai');
 
 const { loadYamlFile } = require('./util.js')
 const SuperClient = require('./superClient')
 
 const processedExpectations = ['status', 'json', 'headers', 'error']
+
+function getItFunction(req) {
+  const useOnly = req.only
+  const useSkip = req.skip
+  let itMethod = it
+  if (useOnly) {
+    itMethod = it.only
+  }
+
+  if (useSkip) {
+    itMethod = it.skip
+  }
+  return itMethod
+}
 
 module.exports = function apiCall(file, apiPort) {
   const config = init(file)
@@ -32,7 +47,8 @@ module.exports = function apiCall(file, apiPort) {
   })
 
   config.apiCalls.swagger.forEach((req) => {
-    const itMethod = req.only ? it.only : it;
+    const itMethod = getItFunction(req);
+
     itMethod(req.name || req.call, async function itFn() {
       this.timeout(apiPort.get('TIMEOUT'))
 
@@ -68,8 +84,28 @@ module.exports = function apiCall(file, apiPort) {
       const save = req.save || {}
 
       try {
+        if (req.before && _.isFunction(req.before)) {
+          req.before.call(req, {
+            apiPort,
+            expect,
+            op: operations[req.call],
+            allReqData,
+            basicAuth,
+          });
+        }
         const res = await SuperClient(apiPort, req, operations[req.call], allReqData, basicAuth)
 
+        if (req.after && _.isFunction(req.after)) {
+          req.after.call(req, {
+            apiPort,
+            specs: config.apiCalls.swagger,
+            res,
+            expect,
+            op: operations[req.call],
+            allReqData,
+            basicAuth,
+          });
+        }
         if (isResPrint) {
           varDump('Response= ', res, true)
         }
