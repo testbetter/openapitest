@@ -1,9 +1,9 @@
-const { loadYamlFile } = require('./util.js')
 const assert = require('assert')
 const klawSync = require('klaw-sync')
 const ApiPort = require('./apiPort')
 const apiCall = require('./apiCall')
 const apiTest = require('./apiTests')
+const { loadYamlFile } = require('./util.js')
 
 const apiPort = new ApiPort()
 apiPort.init()

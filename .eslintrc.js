@@ -16,6 +16,10 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
-      semi: 'off'
+      semi: 'off',
+      'no-use-before-define': 'off',
+      'no-console': 'off',
+      'no-restricted-syntax': 'off', // temporary
+      'class-methods-use-this': 'off' // temporary
   },
 };

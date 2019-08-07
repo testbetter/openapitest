@@ -21,11 +21,13 @@ function getLocalDir(dir, required = true) {
 }
 
 function loadFile(filePath) {
+  let fileData;
   if (fs.existsSync(`${filePath}.js`)) {
-    return require(`${filePath}.js`)
+    fileData = require(`${filePath}.js`) // eslint-disable-line import/no-dynamic-require, global-require
   } if (fs.existsSync(`${filePath}.yaml`)) {
-    return loadYamlFile(`${filePath}.yaml`)
+    fileData = loadYamlFile(`${filePath}.yaml`)
   }
+  return fileData;
 }
 
 function parseOpValue(expectationValue) {
@@ -49,6 +51,11 @@ function parseOpValue(expectationValue) {
   return ret
 }
 
+function getAbsolutePath(envPath) {
+  const cd = process.env.CD
+  return path.isAbsolute(envPath) ? envPath : path.join(cd, envPath)
+}
+
 class ApiPort {
   constructor() {
     this.apiPort = {}
@@ -65,7 +72,7 @@ class ApiPort {
     this.set('GLOBAL_DATA_CONFIG', process.env.GLOBAL_DATA_CONFIG, false)
 
     if (process.env.GLOBAL_DATA_CONFIG) {
-      const globalDataConfigFolderPath = this.getAbsolutePath(process.env.GLOBAL_DATA_CONFIG)
+      const globalDataConfigFolderPath = getAbsolutePath(process.env.GLOBAL_DATA_CONFIG)
       const globalDataConfigFolderPaths = klawSync(globalDataConfigFolderPath, { nodir: true })
       globalDataConfigFolderPaths.forEach((file) => {
         const filePath = file.path
@@ -80,36 +87,36 @@ class ApiPort {
 
     let openApiPath = ''
     if (process.env.OPENAPI_PATH) {
-      openApiPath = this.getAbsolutePath(process.env.OPENAPI_PATH)
+      openApiPath = getAbsolutePath(process.env.OPENAPI_PATH)
     }
     this.set('OPENAPI_PATH', openApiPath || getLocalDir('integration/api-docs.json'))
 
     let testDataPath = ''
     if (process.env.TEST_DATA_PATH) {
-      testDataPath = this.getAbsolutePath(process.env.TEST_DATA_PATH)
+      testDataPath = getAbsolutePath(process.env.TEST_DATA_PATH)
     }
     this.set('TEST_DATA_PATH', testDataPath || getLocalDir('integration/data', false), false)
 
     let sharedDataPath = ''
     if (process.env.SHARED_TEST_DATA) {
-      sharedDataPath = this.getAbsolutePath(process.env.SHARED_TEST_DATA)
+      sharedDataPath = getAbsolutePath(process.env.SHARED_TEST_DATA)
     }
     this.set('SHARED_TEST_DATA', sharedDataPath, false)
 
-    const apis = require(this.get('OPENAPI_PATH'))
+    const apis = require(this.get('OPENAPI_PATH')) // eslint-disable-line import/no-dynamic-require, global-require
 
     const operations = {}
 
     apis.servers[0] = { url: this.get('API_SERVER_URL') }
 
-    for (const path of Object.keys(apis.paths)) {
-      const params = apis.paths[path].parameters || []
-      for (const action of Object.keys(apis.paths[path])) {
-        const actionObj = apis.paths[path][action]
+    for (const apiPath of Object.keys(apis.paths)) {
+      const params = apis.paths[apiPath].parameters || []
+      for (const action of Object.keys(apis.paths[apiPath])) {
+        const actionObj = apis.paths[apiPath][action]
         const { operationId } = actionObj
         if (operationId) {
-          const operation = apis.paths[path][action]
-          operation.path = path
+          const operation = apis.paths[apiPath][action]
+          operation.path = apiPath
           operation.method = action
           operation.parameters = _.unionBy(
             actionObj.parameters,
@@ -125,10 +132,6 @@ class ApiPort {
     this.set('OPENAPI_OPERATIONS', operations)
   }
 
-  getAbsolutePath(envPath) {
-    const cd = process.env.CD
-    return path.isAbsolute(envPath) ? envPath : path.join(cd, envPath)
-  }
 
   reset() {
     for (const key in this.apiPort) {
@@ -220,27 +223,24 @@ class ApiPort {
   }
 
   resolveObject(obj = {}) {
-    for (const key of Object.keys(obj)) {
+    return Object.keys(obj).reduce((actual, key) => {
       const value = obj[key];
-      if (_.isObject(value)) {
-        obj[key] = this.resolveObject(value)
-      } else {
-        obj[key] = this.resolve(value)
-      }
-    }
-    return obj
+      const resolvedValue = _.isObject(value) ? this.resolveObject(value) : this.resolve(value)
+      _.set(actual, key, resolvedValue)
+      return actual;
+    }, {})
   }
 
   getDataFromFile(fileAndKeyName, file = '') {
     this.apiPort.$file = this.apiPort.$file || {}
 
-    const filePath = path.parse(file).dir
+    const fileDir = path.parse(file).dir
     const parts = fileAndKeyName.split('.')
     const fileName = parts[0]
     const objPath = _.join(parts.slice(1), '.')
 
     if (!this.apiPort.$file[fileName]) {
-      const lookIn = [this.get('TEST_DATA_PATH'), filePath, this.get('SHARED_TEST_DATA')]
+      const lookIn = [this.get('TEST_DATA_PATH'), fileDir, this.get('SHARED_TEST_DATA')]
 
       for (const testDataPath of lookIn) {
         if (testDataPath) {
@@ -268,7 +268,7 @@ class ApiPort {
       if (_.findIndex(allParams, { name: key, in: 'path' }) === -1) {
         throw new Error(`Parameter '${key}' does not exist`)
       } else {
-        allParams = _.differenceBy(allParams, [{ name: key, in: 'path' }], 'name')
+        allParams = _.differenceBy(allParams, [{ name: key, in: 'path' }], 'name') // eslint-disable-line
       }
     }
 
@@ -297,14 +297,14 @@ class ApiPort {
     const objPath = keys[0]
     const { op, value } = parseOpValue(expectation[keys[0]])
 
-    const actualVal = objectPath.get(responseObject, objPath)
-    const resolvedValue = this.resolve(value)
+    const actualVal = objectPath.get(responseObject, objPath) // eslint-disable-line no-unused-vars
+    const resolvedValue = this.resolve(value) // eslint-disable-line no-unused-vars
 
     // TODO this would be nicer than eval, but not sure it can work
     // const op = objectPath(expect(actualVal), rest[remainingKeys[0]])
     // expect(op).to.be.a('function')
     // op(value)
-    eval(`expect(actualVal).${op}(resolvedValue)`)
+    eval(`expect(actualVal).${op}(resolvedValue)`) // eslint-disable-line no-eval
   }
 }
 

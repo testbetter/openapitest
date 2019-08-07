@@ -8,7 +8,8 @@ function evaluateData(data) {
   return keys.reduce((obj, key) => {
     const value = data[key]
     const resolvedValue = _.isFunction(value) ? value() : value
-    _.set(obj, key, resolvedValue)
+    const setValue = _.isObject(resolvedValue) ? evaluateData(resolvedValue) : resolvedValue;
+    _.set(obj, key, setValue)
     return obj
   }, {})
 }

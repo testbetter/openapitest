@@ -1,6 +1,7 @@
 const _ = require('lodash')
-const { loadYamlFile } = require('./util.js')
 const objectPath = require('object-path')
+
+const { loadYamlFile } = require('./util.js')
 const SuperClient = require('./superClient')
 
 const processedExpectations = ['status', 'json', 'headers', 'error']
@@ -14,10 +15,10 @@ module.exports = function apiCall(file, apiPort) {
   const { paths, ...remainingSpec } = openSpec
   const operationIds = {}
 
-  for (const route of Object.keys(paths)) {
+  Object.keys(paths).forEach((route) => {
     const actions = paths[route]
 
-    for (const action of Object.keys(actions)) {
+    Object.keys(actions).forEach((action) => {
       const details = actions[action]
 
       operationIds[details.operationId] = Object.assign({}, remainingSpec, {
@@ -27,12 +28,12 @@ module.exports = function apiCall(file, apiPort) {
           },
         },
       })
-    }
-  }
+    })
+  })
 
   config.apiCalls.swagger.forEach((req) => {
     const itMethod = req.only ? it.only : it;
-    itMethod(req.name || req.call, async function () {
+    itMethod(req.name || req.call, async function itFn() {
       this.timeout(apiPort.get('TIMEOUT'))
 
       if (!operationIds[req.call]) {
@@ -54,7 +55,6 @@ module.exports = function apiCall(file, apiPort) {
       }
 
       req.header = apiPort.resolveObject(req.header)
-      const query = apiPort.resolveObject(req.query)
 
       if (reqData.$file) {
         const reqDataFile = apiPort.getDataFromFile(reqData.$file, file)

@@ -1,7 +1,7 @@
 const _ = require('lodash')
 const request = require('superagent')
 
-module.exports = async function (apiPort, req, operation, data, basicAuth) {
+module.exports = async function superClient(apiPort, req, operation, data, basicAuth) {
   const superObj = request[operation.method]
   if (!superObj) {
     throw new Error(`Invalid method: ${operation.method}`)
