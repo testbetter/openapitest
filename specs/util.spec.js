@@ -15,7 +15,7 @@ describe('util', () => {
       })
     })
 
-    it('Should deep value funcions', () => {
+    it('Should resolve deep value funcions', () => {
       expect(util.evaluateData({
         someObj: {
           someObj1: {
