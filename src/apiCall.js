@@ -71,6 +71,7 @@ module.exports = function apiCall(file, apiPort) {
       }
 
       req.header = apiPort.resolveObject(req.header)
+      req.query = apiPort.resolveObject(req.quer)
 
       if (reqData.$file) {
         const reqDataFile = apiPort.getDataFromFile(reqData.$file, file)
@@ -90,7 +91,7 @@ module.exports = function apiCall(file, apiPort) {
             expect,
             specs: config.apiCalls.swagger,
             op: operations[req.call],
-            allReqData,
+            body: allReqData,
             basicAuth,
           });
         }
@@ -103,7 +104,7 @@ module.exports = function apiCall(file, apiPort) {
             res,
             expect,
             op: operations[req.call],
-            allReqData,
+            body: allReqData,
             basicAuth,
           });
         }

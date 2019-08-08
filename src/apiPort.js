@@ -226,9 +226,9 @@ class ApiPort {
     return Object.keys(obj).reduce((actual, key) => {
       const value = obj[key];
       const resolvedValue = _.isObject(value) ? this.resolveObject(value) : this.resolve(value)
-      _.set(actual, key, resolvedValue)
+      actual[key] = resolvedValue
       return actual;
-    }, {})
+    }, obj)
   }
 
   getDataFromFile(fileAndKeyName, file = '') {

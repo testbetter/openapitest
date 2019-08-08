@@ -21,7 +21,8 @@ function evaluateData(data) {
 }
 
 function loadYamlFile(filePath) {
-  return evaluateData(YAML.load(fs.readFileSync(filePath, 'utf8')))
+  const yamlData = evaluateData(YAML.load(fs.readFileSync(filePath, 'utf8')))
+  return yamlData
 }
 
 
