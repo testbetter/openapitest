@@ -68,6 +68,8 @@ if(program.report) {
         reportDir: 'reports',
         reportFilename: 'test-int-report',
         overwrite: true,
+        charts: true,
+        code: false,
         quiet: true
     }
 }
