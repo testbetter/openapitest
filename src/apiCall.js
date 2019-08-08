@@ -88,6 +88,7 @@ module.exports = function apiCall(file, apiPort) {
           req.before.call(req, {
             apiPort,
             expect,
+            specs: config.apiCalls.swagger,
             op: operations[req.call],
             allReqData,
             basicAuth,
