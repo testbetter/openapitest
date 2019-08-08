@@ -62,6 +62,7 @@ Options:
   -s, --sharedir [path]    Shared Test data folder relative/ absolute path.  e.g: <path>/share_data
   -c, --dataConfig [path]  Global Test data config folder relative/ absolute path.  e.g: <path>/global-config
   -u, --url [url]          Server URL. e.g: http://localhost:9000
+  -r, --report <n>         Will generate the html report or not. Default 0; e.g: 1 or 0
   -h, --help               output usage information
 ```
 

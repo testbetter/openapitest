@@ -25,6 +25,11 @@ program
         '-c, --dataConfig [path]',
         'Global Test data config folder relative/ absolute path.  e.g: <path>/global-config'
     )
+    .option(
+        '-r, --report <n>',
+        'Will generate the html report or not.  e.g: 1 or 0',
+        parseInt
+    )
     .option('-u, --url [url]', 'Server URL. e.g: http://localhost:9000')
 
 program.parse(process.argv)
@@ -56,7 +61,18 @@ if (program.sharedir) {
 
 process.env.API_SERVER_URL = program.url
 
-const mocha = new Mocha()
+let options = {}
+if(program.report) {
+    options.reporter = 'mochawesome'
+    options.reporterOptions = {
+        reportDir: 'reports',
+        reportFilename: 'test-int-report',
+        overwrite: true,
+        quiet: true
+    }
+}
+
+const mocha = new Mocha(options)
 
 mocha.addFile(path.join(__dirname, '../src/mocha'))
 mocha.run(function(failures) {
