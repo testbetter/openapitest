@@ -71,7 +71,7 @@ module.exports = function apiCall(file, apiPort) {
       }
 
       req.header = apiPort.resolveObject(req.header)
-      req.query = apiPort.resolveObject(req.quer)
+      apiPort.resolveObject(req.query)
 
       if (reqData.$file) {
         const reqDataFile = apiPort.getDataFromFile(reqData.$file, file)

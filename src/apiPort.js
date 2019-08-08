@@ -226,7 +226,7 @@ class ApiPort {
     return Object.keys(obj).reduce((actual, key) => {
       const value = obj[key];
       const resolvedValue = _.isObject(value) ? this.resolveObject(value) : this.resolve(value)
-      actual[key] = resolvedValue
+      _.set(actual, key, resolvedValue)
       return actual;
     }, obj)
   }
