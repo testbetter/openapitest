@@ -97,6 +97,9 @@ Example: `login.data.yaml`
 		* [save](#save)
 		* [print](#print)
 		* [only](#only)
+		* [skip](#skip)
+		* [before](#before)
+		* [after](#after)
 		* [expect](#expect)
 			* [json](#expect)
 			* [headers](#expect)
@@ -240,9 +243,30 @@ print: 1
 <br />
 
 **<a name='only'>`only:`</a>**
-If we want to run only a subset of tests by using `only` tag. Example:
+If you want to run only a subset of tests by using `only` tag. Example:
 ```sh
 only: true
+```
+<br />
+
+**<a name='skip'>`skip:`</a>**
+If you want to skip one or more tests, use the `skip` Example:
+```sh
+skip: true
+```
+<br />
+
+**<a name='before'>`before:`</a>**
+With its default "BDD"-style interface, openapitest, provides the hooks before, these should be used to set up preconditions or debug before your tests.
+```sh
+before: !!js/function "function(testData){  /** runs before the test */;   }"
+```
+<br />
+
+**<a name='after'>`after:`</a>**
+With its default "BDD"-style interface, openapitest, provides the hooks after, these should be used to clean up after your tests or doing custum expecs that the openapitest APi does not provide.
+```sh
+after: !!js/function "function(testData){  /** runs after the test */;   }"
 ```
 <br />
 
