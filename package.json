@@ -1,6 +1,6 @@
 {
   "name": "openapitest",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -31,7 +31,7 @@
     "klaw-sync": "^6.0.0",
     "lodash": "^4.17.14",
     "mocha": "^5.2.0",
-    "mochawesome": "^3.1.1",
+    "mochawesome": "^3.1.2",
     "object-path": "^0.11.3",
     "object-values": "^1.0.0",
     "shelljs": "^0.8.3",
