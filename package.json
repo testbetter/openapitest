@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha specs",
+    "lint": "eslint src"
   },
   "engines": {
     "node": "10.x",
@@ -21,9 +22,11 @@
   "author": "Test Better",
   "license": "MIT",
   "dependencies": {
+    "chai": "^4.2.0",
     "colors": "^1.3.3",
     "commander": "^2.19.0",
     "expect.js": "^0.3.1",
+    "js-yaml": "^3.13.1",
     "jsonpath": "^1.0.0",
     "klaw-sync": "^6.0.0",
     "lodash": "^4.17.14",
@@ -32,7 +35,11 @@
     "object-path": "^0.11.3",
     "object-values": "^1.0.0",
     "shelljs": "^0.8.3",
-    "superagent": "^4.1.0",
-    "yamljs": "^0.2.10"
+    "superagent": "^4.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-plugin-import": "^2.18.2"
   }
 }

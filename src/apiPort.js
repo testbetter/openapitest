@@ -2,11 +2,59 @@ const _ = require('lodash')
 const objectPath = require('object-path')
 const expect = require('expect.js')
 const fs = require('fs')
-const YAML = require('yamljs')
 const path = require('path')
 const klawSync = require('klaw-sync')
+const { loadYamlFile } = require('./util.js')
 
 const currentDir = process.cwd()
+
+
+function getLocalDir(dir, required = true) {
+  const localDir = path.join(currentDir, dir)
+  if (!fs.existsSync(localDir)) {
+    if (required) {
+      throw new Error(`local directory ${dir} is required for integration testing.`)
+    }
+    return undefined
+  }
+  return localDir
+}
+
+function loadFile(filePath) {
+  let fileData;
+  if (fs.existsSync(`${filePath}.js`)) {
+    fileData = require(`${filePath}.js`) // eslint-disable-line import/no-dynamic-require, global-require
+  } if (fs.existsSync(`${filePath}.yaml`)) {
+    fileData = loadYamlFile(`${filePath}.yaml`)
+  }
+  return fileData;
+}
+
+function parseOpValue(expectationValue) {
+  if (typeof expectationValue !== 'string' || !expectationValue.startsWith('to.')) {
+    return {
+      op: 'to.be.equal',
+      value: expectationValue,
+    }
+  }
+
+  // split the string on spaces
+  const parts = expectationValue.split(' ')
+  const ret = {
+    op: parts[0],
+  }
+
+  if (parts.length > 1) {
+    ret.value = expectationValue.substring(ret.op.length).trim()
+  }
+
+  return ret
+}
+
+function getAbsolutePath(envPath) {
+  const cd = process.env.CD
+  return path.isAbsolute(envPath) ? envPath : path.join(cd, envPath)
+}
 
 class ApiPort {
   constructor() {
@@ -22,14 +70,14 @@ class ApiPort {
 
     this.set('API_TESTS_PATH', process.env.API_TESTS_PATH || getLocalDir('integration/test-spec'))
     this.set('GLOBAL_DATA_CONFIG', process.env.GLOBAL_DATA_CONFIG, false)
-    
+
     if (process.env.GLOBAL_DATA_CONFIG) {
-      const globalDataConfigFolderPath = this.getAbsolutePath(process.env.GLOBAL_DATA_CONFIG)
-      let globalDataConfigFolderPaths = klawSync(globalDataConfigFolderPath, { nodir: true })
-      globalDataConfigFolderPaths.forEach(file => {
+      const globalDataConfigFolderPath = getAbsolutePath(process.env.GLOBAL_DATA_CONFIG)
+      const globalDataConfigFolderPaths = klawSync(globalDataConfigFolderPath, { nodir: true })
+      globalDataConfigFolderPaths.forEach((file) => {
         const filePath = file.path
         let fileName = path.basename(filePath, path.extname(filePath));
-        fileName = fileName.replace(".config", "")
+        fileName = fileName.replace('.config', '')
         const fileData = loadFile(filePath, true)
         if (fileData) {
           this.globalDataConfig[fileName] = fileData
@@ -39,43 +87,43 @@ class ApiPort {
 
     let openApiPath = ''
     if (process.env.OPENAPI_PATH) {
-      openApiPath = this.getAbsolutePath(process.env.OPENAPI_PATH)
+      openApiPath = getAbsolutePath(process.env.OPENAPI_PATH)
     }
     this.set('OPENAPI_PATH', openApiPath || getLocalDir('integration/api-docs.json'))
 
     let testDataPath = ''
     if (process.env.TEST_DATA_PATH) {
-      testDataPath = this.getAbsolutePath(process.env.TEST_DATA_PATH)
+      testDataPath = getAbsolutePath(process.env.TEST_DATA_PATH)
     }
     this.set('TEST_DATA_PATH', testDataPath || getLocalDir('integration/data', false), false)
 
     let sharedDataPath = ''
     if (process.env.SHARED_TEST_DATA) {
-      sharedDataPath = this.getAbsolutePath(process.env.SHARED_TEST_DATA)
+      sharedDataPath = getAbsolutePath(process.env.SHARED_TEST_DATA)
     }
     this.set('SHARED_TEST_DATA', sharedDataPath, false)
 
-    const apis = require(this.get('OPENAPI_PATH'))
+    const apis = require(this.get('OPENAPI_PATH')) // eslint-disable-line import/no-dynamic-require, global-require
 
     const operations = {}
 
     apis.servers[0] = { url: this.get('API_SERVER_URL') }
 
-    for (const path of Object.keys(apis.paths)) {
-      const params = apis.paths[path].parameters || []
-      for (const action of Object.keys(apis.paths[path])) {
-        const actionObj = apis.paths[path][action];
-        const operationId = actionObj.operationId
+    for (const apiPath of Object.keys(apis.paths)) {
+      const params = apis.paths[apiPath].parameters || []
+      for (const action of Object.keys(apis.paths[apiPath])) {
+        const actionObj = apis.paths[apiPath][action]
+        const { operationId } = actionObj
         if (operationId) {
-          const operation = apis.paths[path][action]
-          operation.path = path
+          const operation = apis.paths[apiPath][action]
+          operation.path = apiPath
           operation.method = action
           operation.parameters = _.unionBy(
             actionObj.parameters,
             params,
-            'name'
+            'name',
           )
-          operations[actionObj.operationId] = operation;
+          operations[actionObj.operationId] = operation
         }
       }
     }
@@ -84,10 +132,6 @@ class ApiPort {
     this.set('OPENAPI_OPERATIONS', operations)
   }
 
-  getAbsolutePath(envPath) {
-    let cd = process.env.CD
-    return path.isAbsolute(envPath) ? envPath : path.join(cd, envPath)
-  }
 
   reset() {
     for (const key in this.apiPort) {
@@ -123,7 +167,7 @@ class ApiPort {
     let exists = true
 
     if (matches) {
-      matches.forEach(match => {
+      matches.forEach((match) => {
         const repl = objectPath.get(this.apiPort, match.substring(2, match.length - 1))
 
         if (typeof repl === 'undefined') {
@@ -146,9 +190,9 @@ class ApiPort {
     if (valueStr.startsWith('$config.')) {
       const fileAndKeyName = valueStr.substring('$config.'.length)
       const parts = fileAndKeyName.split('.')
-      const fileName = parts.length > 0 ? parts[0] : ""
-      const keyName = parts.length > 0 ? parts[1] : ""
-      return fileName && keyName ? this.globalDataConfig[fileName][keyName] : ""
+      const fileName = parts.length > 0 ? parts[0] : ''
+      const keyName = parts.length > 0 ? parts[1] : ''
+      return fileName && keyName ? this.globalDataConfig[fileName][keyName] : ''
     }
 
     const matches = valueStr.match(/\${[^.][^}]+}/g)
@@ -158,8 +202,8 @@ class ApiPort {
     }
 
     for (const match of matches) {
-      let tokenVar = match.substring(2, match.length - 1)
-      let replaceStr = objectPath.get(this.apiPort, tokenVar)
+      const tokenVar = match.substring(2, match.length - 1)
+      const replaceStr = objectPath.get(this.apiPort, tokenVar)
       if (!replaceStr) {
         throw new Error(`${tokenVar} not found.`)
       }
@@ -169,7 +213,7 @@ class ApiPort {
         }
         return replaceStr
       }
-      if (valueStr === match && (typeof repl === 'number' || typeof replaceStr === 'boolean')) {
+      if (valueStr === match && (typeof replaceStr === 'number' || typeof replaceStr === 'boolean')) {
         return replaceStr
       }
       valueStr = valueStr.replace(match, replaceStr)
@@ -179,31 +223,29 @@ class ApiPort {
   }
 
   resolveObject(obj = {}) {
-    for (const key of Object.keys(obj)) {
+    return Object.keys(obj).reduce((actual, key) => {
       const value = obj[key];
-      if (_.isObject(value)) {
-       obj[key] = this.resolveObject(value)
-      } else {
-       obj[key] = this.resolve(value)
-      }
-    }
-    return obj
+      const resolvedValue = _.isObject(value) ? this.resolveObject(value) : this.resolve(value)
+      _.set(actual, key, resolvedValue)
+      return actual;
+    }, obj)
   }
 
-  getDataFromFile(fileAndKeyName, file = "") {
+  getDataFromFile(fileAndKeyName, file = '') {
     this.apiPort.$file = this.apiPort.$file || {}
 
-    const filePath = path.parse(file).dir
+    const fileDir = path.parse(file).dir
     const parts = fileAndKeyName.split('.')
     const fileName = parts[0]
     const objPath = _.join(parts.slice(1), '.')
 
     if (!this.apiPort.$file[fileName]) {
-      const lookIn = [this.get('TEST_DATA_PATH'), filePath, this.get('SHARED_TEST_DATA')]
+      const lookIn = [this.get('TEST_DATA_PATH'), fileDir, this.get('SHARED_TEST_DATA')]
 
       for (const testDataPath of lookIn) {
         if (testDataPath) {
-          const fileData = loadFile(`${testDataPath}/${fileName}.data`)
+          const filePath = `${testDataPath}/${fileName}.data`
+          const fileData = loadFile(filePath)
           if (fileData) {
             this.apiPort.$file[fileName] = fileData
             break
@@ -226,11 +268,11 @@ class ApiPort {
       if (_.findIndex(allParams, { name: key, in: 'path' }) === -1) {
         throw new Error(`Parameter '${key}' does not exist`)
       } else {
-        allParams = _.differenceBy(allParams, [{ name: key, in: 'path' }], 'name')
+        allParams = _.differenceBy(allParams, [{ name: key, in: 'path' }], 'name') // eslint-disable-line
       }
     }
 
-    let foundIndex = _.findIndex(allParams, { in: 'path', required: true })
+    const foundIndex = _.findIndex(allParams, { in: 'path', required: true })
     if (allParams && foundIndex !== -1) {
       throw new Error(`Parameter '${allParams.foundIndex.name}' is required`)
     }
@@ -255,59 +297,15 @@ class ApiPort {
     const objPath = keys[0]
     const { op, value } = parseOpValue(expectation[keys[0]])
 
-    const actualVal = objectPath.get(responseObject, objPath)
-    const resolvedValue = this.resolve(value)
+    const actualVal = objectPath.get(responseObject, objPath) // eslint-disable-line no-unused-vars
+    const resolvedValue = this.resolve(value) // eslint-disable-line no-unused-vars
 
     // TODO this would be nicer than eval, but not sure it can work
     // const op = objectPath(expect(actualVal), rest[remainingKeys[0]])
     // expect(op).to.be.a('function')
     // op(value)
-    eval(`expect(actualVal).${op}(resolvedValue)`)
+    eval(`expect(actualVal).${op}(resolvedValue)`) // eslint-disable-line no-eval
   }
 }
 
 module.exports = ApiPort
-
-function getLocalDir(dir, required = true) {
-  const localDir = path.join(currentDir, dir)
-  if (!fs.existsSync(localDir)) {
-    if (required) {
-      throw new Error(`local directory ${dir} is required for integration testing.`)
-    }
-    return undefined
-  }
-  return localDir
-}
-
-function loadFile(filePath, hasExt = false) {
-  if (fs.existsSync(`${filePath}.js`)) {
-    return require(`${filePath}.js`)
-  } else if (fs.existsSync(`${filePath}.yaml`)) {
-    return YAML.load(`${filePath}.yaml`)
-  } else if (hasExt && path.extname(filePath) === '.js') {
-    return require(`${filePath}`)
-  } else if (hasExt && path.extname(filePath) === '.yaml') {
-    return YAML.load(`${filePath}`)
-  }
-}
-
-function parseOpValue(expectationValue) {
-  if (typeof expectationValue !== 'string' || !expectationValue.startsWith('to.')) {
-    return {
-      op: 'to.be.equal',
-      value: expectationValue
-    }
-  }
-
-  // split the string on spaces
-  const parts = expectationValue.split(' ')
-  const ret = {
-    op: parts[0]
-  }
-
-  if (parts.length > 1) {
-    ret.value = expectationValue.substring(ret.op.length).trim()
-  }
-
-  return ret
-}
