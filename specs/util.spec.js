@@ -33,4 +33,18 @@ describe('util', () => {
       })
     })
   })
+
+  describe('loadYamlFile', () => {
+    it('should thrown an error if the file is invalid', () => {
+      expect(() => util.loadYamlFile('./fixtures/fixture-invalid.data.yaml')).to.throw(/Error parsing the file .\/fixtures\/fixture-invalid.data.yaml/);
+    });
+
+    it('Should resolve the files and parse yaml into to an object', () => {
+      const data = util.loadYamlFile('./fixtures/fixture.data.yaml')
+      expect(data).to.deep.equal({
+        test: 'This is a test',
+        value: 123,
+      })
+    })
+  })
 })

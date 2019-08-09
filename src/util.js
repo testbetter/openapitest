@@ -21,8 +21,14 @@ function evaluateData(data) {
 }
 
 function loadYamlFile(filePath) {
-  const yamlData = evaluateData(YAML.load(fs.readFileSync(filePath, 'utf8')))
-  return yamlData
+  const fileText = fs.readFileSync(filePath, 'utf8')
+  try {
+    const parsedData = YAML.load(fileText)
+    const yamlDataEvaluated = evaluateData(parsedData)
+    return yamlDataEvaluated
+  } catch (e) {
+    throw new Error(`Error parsing the file ${filePath}: ${e.message}`)
+  }
 }
 
 

@@ -2,6 +2,7 @@ const { expect } = require('chai')
 const ApiPort = require('../src/apiPort.js')
 
 describe('apiPort', () => {
+
   before(() => {
     process.env.TEST_DATA_PATH = './fixtures'
     process.env.API_TESTS_PATH = './'
@@ -12,6 +13,7 @@ describe('apiPort', () => {
   })
 
   describe('getDataFromFile', () => {
+
     it('Should resolve the files and parse yaml into to an object', () => {
       const apiPort = new ApiPort()
       apiPort.init()
@@ -24,6 +26,7 @@ describe('apiPort', () => {
   })
 
   describe('set', () => {
+
     it('should set a value and be able to get it', () => {
       const apiPort = new ApiPort()
       apiPort.init()
@@ -34,8 +37,8 @@ describe('apiPort', () => {
     it('should not allow undefined values if the value is mandatory', () => {
       const apiPort = new ApiPort()
       apiPort.init()
-      expect(() => apiPort.set('some', undefined, true)).to.throw();
-      expect(() => apiPort.set('some', undefined)).to.throw();
+      expect(() => apiPort.set('some', undefined, true)).to.throw('Value required for: some');
+      expect(() => apiPort.set('some', undefined)).to.throw('Value required for: some');
     })
 
     it('should allow undefined values if the value is not mandatory', () => {

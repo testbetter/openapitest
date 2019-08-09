@@ -259,14 +259,35 @@ skip: true
 
 **<a name='before'>`before:`</a>**
 With its default "BDD"-style interface, openapitest, provides the hooks before, these should be used to set up preconditions or debug before your tests.
-```sh
+```js
+/**
+*
+* @param testData holds all the test data you can use in before code
+* @param {expect} testData.expect chaijs expect API e.g: `expec(true).to.be.equal(false);//Will fail`, for full documentation see `https://www.chaijs.com/api/bdd/
+* @param {array[Spec]} testData.specs array of specs in the running suite e.g: `[ [ { name: 'Login - success', only: false, save: [Object] },...]`, can be used to modify other tests behavior
+* @param {object} testData.op operation definition comming from open api spec file, e.g: `{ tags: [ 'User' ], summary: 'login', requestBody: {...} responses: {...}'
+* @param {object|undefined} testData.body the request body to be sent, in get request it may be undefined
+* @param testData.basicAuth auth information to be used in the auth header
+* 
+*/
 before: !!js/function "function(testData){  /** runs before the test */;   }"
 ```
 <br />
 
 **<a name='after'>`after:`</a>**
 With its default "BDD"-style interface, openapitest, provides the hooks after, these should be used to clean up after your tests or doing custum expecs that the openapitest APi does not provide.
-```sh
+```js
+/**
+*
+* @param testData holds all the test data you can use in after code
+* @param {expect} testData.expect chaijs expect API e.g: `expec(true).to.be.equal(false);//Will fail`, for full documentation see `https://www.chaijs.com/api/bdd/
+* @param {array[Spec]} testData.specs array of specs in the running suite e.g: `[ [ { name: 'Login - success', only: false, save: [Object] },...]`, can be used to modify other tests behavior
+* @param {object} testData.op operation definition comming from open api spec file, e.g: `{ tags: [ 'User' ], summary: 'login', requestBody: {...} responses: {...}'
+* @param {object|undefined} testData.body the request body to be sent, in get request it may be undefined
+* @param {object} testData.basicAuth auth information to be used in the auth header
+* @param {SuperagentResponse} testData.res server response to full documentation check `http://visionmedia.github.io/superagent/#response-properties`
+* 
+*/
 after: !!js/function "function(testData){  /** runs after the test */;   }"
 ```
 <br />

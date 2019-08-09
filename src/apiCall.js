@@ -30,12 +30,8 @@ module.exports = function apiCall(file, apiPort) {
   const { paths, ...remainingSpec } = openSpec
   const operationIds = {}
 
-  Object.keys(paths).forEach((route) => {
-    const actions = paths[route]
-
-    Object.keys(actions).forEach((action) => {
-      const details = actions[action]
-
+  _.forEach(paths, (actions, route) => {
+    _.forEach(actions, (details, action) => {
       operationIds[details.operationId] = Object.assign({}, remainingSpec, {
         paths: {
           [route]: {
