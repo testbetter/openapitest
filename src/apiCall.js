@@ -1,6 +1,6 @@
 const _ = require('lodash')
 const objectPath = require('object-path')
-const { expect } = require('chai');
+const { expect } = require('chai')
 
 const { loadYamlFile } = require('./util.js')
 const SuperClient = require('./superClient')

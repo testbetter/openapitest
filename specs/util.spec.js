@@ -47,4 +47,11 @@ describe('util', () => {
       })
     })
   })
+
+  describe('FakerClass', () => {
+    it('should evaluate faker API', () => {
+      const faker = new util.FakerClass('name.lastName', 'global')
+      expect(faker.value('global')).to.be.a('string')
+    })
+  })
 })

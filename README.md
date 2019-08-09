@@ -1,8 +1,9 @@
 # Openapitest Framework
+
 The purpose of this openapitest framework is to simplify authoring, organizing, executing, and reporting result of API tests using API specification. It runs on node.js and distributed via npm. Add this module to your node.js project as a development dependency and start writing API or Integration tests using YAML language.
 
 
-[![Build Status](https://travis-ci.org/mateusfreira/openapitest.svg?branch=master)](https://travis-ci.org/mateusfreira/openapitest)
+[![Build Status](https://travis-ci.org/testbetter/openapitest.svg?branch=master)](https://travis-ci.org/testbetter/openapitest)
 
 ### Installation
 ----
