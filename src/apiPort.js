@@ -213,7 +213,7 @@ class ApiPort {
         }
         return replaceStr
       }
-      if (valueStr === match && (typeof repl === 'number' || typeof replaceStr === 'boolean')) {
+      if (valueStr === match && (typeof replaceStr === 'number' || typeof replaceStr === 'boolean')) {
         return replaceStr
       }
       valueStr = valueStr.replace(match, replaceStr)
