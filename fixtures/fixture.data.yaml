@@ -1,0 +1,2 @@
+test: This is a test
+value: !!js/function 'function () { return 123;}'

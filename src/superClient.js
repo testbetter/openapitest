@@ -1,15 +1,15 @@
 const _ = require('lodash')
 const request = require('superagent')
 
-module.exports = async function (apiPort, req, operation, data, basicAuth) {
+module.exports = async function superClient(apiPort, req, operation, data, basicAuth) {
   const superObj = request[operation.method]
   if (!superObj) {
     throw new Error(`Invalid method: ${operation.method}`)
   }
 
-  let path = operation.path
+  let { path } = operation
   if (req.parameters) {
-    _.forEach(req.parameters, function (value, key) {
+    _.forEach(req.parameters, (value, key) => {
       path = _.replace(path, `{${key}}`, apiPort.resolve(value))
     })
   }
