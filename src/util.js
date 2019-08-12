@@ -38,8 +38,12 @@ FakerClass.prototype.value = function value(scope) {
 
 const CUSTUM_SCHEMA = YAML.Schema.create([FakerClassType])
 
+function isFaker(data) {
+  return (data instanceof FakerClass) && data.value && isFunction(data.value)
+}
+
 function evaluateFaker(data, scope) {
-  if (data.value && isFunction(data.value)) {
+  if (isFaker(data)) {
     const resulvedValue = data.value(scope)
     return resulvedValue
   }
@@ -47,7 +51,7 @@ function evaluateFaker(data, scope) {
 }
 
 function evaluateData(data) {
-  if (data.value && isFunction(data.value)) {
+  if (isFaker(data)) {
     return evaluateFaker(data, 'global')
   }
   const keys = Object.keys(data)
