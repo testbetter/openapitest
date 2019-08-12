@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "mocha specs",
-    "lint": "eslint src"
+    "lint": "eslint src specs",
+    "pretty": "eslint src specs --fix"
   },
   "engines": {
     "node": "10.x",
