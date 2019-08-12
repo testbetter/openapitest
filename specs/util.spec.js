@@ -72,5 +72,9 @@ describe('util', () => {
         data: 1,
       })
     })
+
+    it('should thrown an error if the file does not exists', () => {
+      expect(() => util.loadFile('./there-no-this-file')).to.throw('Could not load the file: "./there-no-this-file". One of the next files must exists: ./there-no-this-file,./there-no-this-file.js,./there-no-this-file.yaml,./there-no-this-file.yml');
+    });
   })
 })

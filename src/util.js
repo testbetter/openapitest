@@ -1,7 +1,7 @@
 const fs = require('fs')
 const YAML = require('js-yaml')
 const {
-  isFunction, includes, set, isObject,
+  isFunction, includes, set, isObject, find, endsWith,
 } = require('lodash')
 
 const isObj = value => isObject(value) && !isFunction(value)
@@ -32,16 +32,22 @@ function loadYamlFile(filePath) {
 }
 
 
-function loadFile(filePath) {
-  let fileData;
-  if (fs.existsSync(`${filePath}.js`)) {
-    fileData = require(`${filePath}.js`) // eslint-disable-line import/no-dynamic-require, global-require
-  } else if (fs.existsSync(`${filePath}.yaml`)) {
-    fileData = loadYamlFile(`${filePath}.yaml`)
-  } else if (fs.existsSync(filePath)) {
-    fileData = loadYamlFile(filePath)
+function loadFile(fileToLoad) {
+  const candidateFileNames = [fileToLoad, `${fileToLoad}.js`, `${fileToLoad}.yaml`, `${fileToLoad}.yml`];
+
+  const filePath = find(candidateFileNames, fs.existsSync)
+
+  if (filePath) {
+    let fileData;
+    if (endsWith(filePath, 'js')) {
+      fileData = require(filePath) // eslint-disable-line import/no-dynamic-require, global-require
+    } else {
+      fileData = loadYamlFile(filePath)
+    }
+    return fileData;
   }
-  return fileData;
+  throw Error(`Could not load the file: "${fileToLoad}".`
+    + ` One of the next files must exists: ${candidateFileNames.join(',')}`)
 }
 
 module.exports = {

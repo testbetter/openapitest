@@ -235,10 +235,15 @@ class ApiPort {
       for (const testDataPath of lookIn) {
         if (testDataPath) {
           const filePath = `${testDataPath}/${fileName}.data`
-          const fileData = loadFile(filePath)
-          if (fileData) {
-            this.apiPort.$file[fileName] = fileData
-            break
+          try {
+            const fileData = loadFile(filePath)
+            if (fileData) {
+              this.apiPort.$file[fileName] = fileData
+              break
+            }
+          } catch (e) {
+            delete this.apiPort.$file[fileName]
+            // Ignored here if not found will re-throw the error in the end of this loop
           }
         }
       }
