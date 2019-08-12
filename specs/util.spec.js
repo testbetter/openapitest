@@ -1,6 +1,7 @@
 const {
   expect,
 } = require('chai')
+const path = require('path')
 const util = require('../src/util.js')
 
 describe('util', () => {
@@ -44,6 +45,31 @@ describe('util', () => {
       expect(data).to.deep.equal({
         test: 'This is a test',
         value: 123,
+      })
+    })
+  })
+
+  describe('loadFile', () => {
+    it('Should resolve the files and parse yaml into to an object with extention missing', () => {
+      const data = util.loadFile('./fixtures/fixture.data')
+      expect(data).to.deep.equal({
+        test: 'This is a test',
+        value: 123,
+      })
+    })
+
+    it('Should resolve the files and parse yaml into to an object if the extentions is present', () => {
+      const data = util.loadFile('./fixtures/fixture.data.yaml')
+      expect(data).to.deep.equal({
+        test: 'This is a test',
+        value: 123,
+      })
+    })
+
+    it('Should resolve js files', () => {
+      const data = util.loadFile(path.resolve('./fixtures/fixture.javascript'))
+      expect(data).to.deep.equal({
+        data: 1,
       })
     })
   })
