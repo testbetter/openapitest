@@ -39,7 +39,7 @@ function loadFile(fileToLoad) {
 
   if (filePath) {
     let fileData;
-    if (endsWith(filePath, 'js')) {
+    if (endsWith(filePath, '.js')) {
       fileData = require(filePath) // eslint-disable-line import/no-dynamic-require, global-require
     } else {
       fileData = loadYamlFile(filePath)
