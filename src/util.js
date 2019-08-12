@@ -2,15 +2,19 @@ const fs = require('fs')
 const YAML = require('js-yaml')
 const faker = require('faker')
 const {
-  isFunction, includes, set, isObject, mapValues,
+  isFunction, includes, set, isObject, mapValues, partialRight, isArray, ary
 } = require('lodash')
+
+const GLOBAL = 'global'
+const FILE = 'file'
+const TEST = 'test'
 
 const isObj = value => isObject(value) && !isFunction(value)
 
 const KEYS_TO_IGNORE = ['before', 'after']
 
 
-function FakerClass(fakerInstruction, scope = 'global') {
+function FakerClass(fakerInstruction, scope = GLOBAL) {
   this.fakerInstruction = fakerInstruction
   this.scope = scope
 }
@@ -47,12 +51,20 @@ function evaluateFaker(data, scope) {
     const resulvedValue = data.value(scope)
     return resulvedValue
   }
-  return mapValues(data, value => (isObj(value) ? evaluateFaker(value) : value))
+
+  if (isArray(data)) {
+    return data.map(ary(partialRight(evaluateFaker, scope), 1))
+  }
+
+  if (isObj(data)) {
+    return mapValues(data, value => (isObj(value) ? evaluateFaker(value, scope) : value))
+  }
+  return data
 }
 
 function evaluateData(data) {
   if (isFaker(data)) {
-    return evaluateFaker(data, 'global')
+    return evaluateFaker(data, GLOBAL)
   }
   const keys = Object.keys(data)
   return keys.reduce((obj, key) => {
@@ -80,4 +92,10 @@ module.exports = {
   loadYamlFile,
   evaluateData,
   FakerClass,
+  evaluateFaker,
+  fakerScopes: {
+    global: GLOBAL,
+    file: FILE,
+    test: TEST,
+  },
 }
