@@ -32,7 +32,20 @@ function loadYamlFile(filePath) {
 }
 
 
+function loadFile(filePath) {
+  let fileData;
+  if (fs.existsSync(`${filePath}.js`)) {
+    fileData = require(`${filePath}.js`) // eslint-disable-line import/no-dynamic-require, global-require
+  } else if (fs.existsSync(`${filePath}.yaml`)) {
+    fileData = loadYamlFile(`${filePath}.yaml`)
+  } else if (fs.existsSync(filePath)) {
+    fileData = loadYamlFile(filePath)
+  }
+  return fileData;
+}
+
 module.exports = {
   loadYamlFile,
   evaluateData,
+  loadFile,
 }
