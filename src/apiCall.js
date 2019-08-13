@@ -23,7 +23,6 @@ function getItFunction(req) {
 
 module.exports = function apiCall(file, apiPort) {
   const config = init(file)
-
   const openSpec = apiPort.get('OPENAPI_SPEC')
   const operations = apiPort.get('OPENAPI_OPERATIONS')
 
@@ -182,6 +181,7 @@ module.exports = function apiCall(file, apiPort) {
       }
     })
   })
+  return config
 }
 
 function init(file) {

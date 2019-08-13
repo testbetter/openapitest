@@ -29,6 +29,7 @@ describe('apiPort', () => {
       expect(data.name).to.be.a('string')
       expect(parseInt(data.number, 10)).to.be.a('number')
       expect(data).have.nested.property('some.anotherOne.deepDeepValue').and.to.be.a('string')
+      expect(data).have.nested.property('nameInFile').and.not.to.be.a('string')
     })
   })
 

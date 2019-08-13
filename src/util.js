@@ -9,14 +9,35 @@ const GLOBAL = 'global'
 const FILE = 'file'
 const TEST = 'test'
 
+const SCOPE_HIERARCHY = {
+  [GLOBAL]: [GLOBAL],
+  [FILE]: [FILE, GLOBAL],
+  [TEST]: [TEST, FILE, GLOBAL],
+};
+
 const isObj = value => isObject(value) && !isFunction(value)
 
 const KEYS_TO_IGNORE = ['before', 'after']
 
+function getScopesToEvaluate(scope) {
+  const scopesToEvaluate = SCOPE_HIERARCHY[scope]
+  if (!scopesToEvaluate) {
+    throw new Error(`Error: ${scope} is not a valid Faker scope. Try one of ${Object.keys(SCOPE_HIERARCHY).join(',')}`)
+  }
+  return scopesToEvaluate
+}
+
+const validateScope = getScopesToEvaluate // Sugar function to be used in FakerClass constructor
 
 function FakerClass(fakerInstruction, scope = GLOBAL) {
   this.fakerInstruction = fakerInstruction
   this.scope = scope
+  validateScope(scope)
+}
+
+FakerClass.prototype.value = function value(scope = GLOBAL) {
+  const scopesToEvaluate = getScopesToEvaluate(scope)
+  return includes(scopesToEvaluate, this.scope) ? faker.fake(`{{${this.fakerInstruction}}}`) : this
 }
 
 const FakerClassType = new YAML.Type('!faker', {
@@ -36,9 +57,6 @@ const FakerClassType = new YAML.Type('!faker', {
   },
 });
 
-FakerClass.prototype.value = function value(scope) {
-  return scope === this.scope ? faker.fake(`{{${this.fakerInstruction}}}`) : this
-}
 
 const CUSTUM_SCHEMA = YAML.Schema.create([FakerClassType])
 

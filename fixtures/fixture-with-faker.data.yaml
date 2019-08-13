@@ -4,4 +4,4 @@ number: !faker ["random.number"]
 some: 
     anotherOne: 
         deepDeepValue: !faker ["name.lastName"]
-nameInFile: !faker ["name.firstName", "global"]
+nameInFile: !faker ["name.firstName", "file"]
