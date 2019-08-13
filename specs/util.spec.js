@@ -49,6 +49,7 @@ describe('util', () => {
     })
   })
 
+<<<<<<< HEAD
   describe('loadFile', () => {
     it('Should resolve the files and parse yaml into to an object with extention missing', () => {
       const data = util.loadFile('./fixtures/fixture.data')
@@ -78,6 +79,8 @@ describe('util', () => {
     });
   });
 
+=======
+>>>>>>> ac14cc6af67da7167e8be64e647724ffe82dcd6d
   describe('FakerClass', () => {
     it('should evaluate faker API', () => {
       const faker = new util.FakerClass('name.lastName', 'global')
