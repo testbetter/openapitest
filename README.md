@@ -507,7 +507,7 @@ Sometime you may want to randomize the tests to create more realistic Test Scena
 the box [Faker.js API](http://marak.github.io/faker.js/index.html). 
 
 Faker is a massive amount of fake data generator.
-All you need to do is to add in any field the type `$faker ["$faker.api.you.want", "$scope"]`, and it will be replaced by the randomized value. Next, we are going to present some examples, if you need the complete documentation, please read [Faker.js
+All you need to do is to add in any field the type `!faker ["faker.api.you.want", "scope"]`, and it will be replaced by the randomized value. Next, we are going to present some examples, if you need the complete documentation, please read [Faker.js
 docs](http://marak.github.io/faker.js/index.html).
 
 ```yaml
