@@ -2,7 +2,8 @@ const _ = require('lodash')
 const objectPath = require('object-path')
 const { expect } = require('chai')
 
-const { loadYamlFile, evaluateFaker, fakerScopes } = require('./util.js')
+const { loadYamlFile } = require('./util.js')
+const { evaluateFaker, fakerScopes } = require('./customTypes/faker.js')
 const SuperClient = require('./superClient')
 
 const processedExpectations = ['status', 'json', 'headers', 'error']

@@ -77,41 +77,4 @@ describe('util', () => {
       expect(() => util.loadFile('./there-no-this-file')).to.throw('Could not load the file: "./there-no-this-file". One of the next files must exists: ./there-no-this-file,./there-no-this-file.js,./there-no-this-file.yaml,./there-no-this-file.yml');
     });
   });
-
-  describe('FakerClass', () => {
-    it('should evaluate faker API', () => {
-      const faker = new util.FakerClass('name.lastName', 'global')
-      expect(faker.value('global')).to.be.a('string')
-    })
-
-    it('should evaluate not evaluate global scope if the FakerClass has a file scope', () => {
-      const faker = new util.FakerClass('name.lastName', util.fakerScopes.file)
-
-      expect(faker.value('global')).not.to.be.a('string')
-
-      expect(faker.value('file')).to.be.a('string')
-
-      expect(faker.value('test')).to.be.a('string')
-    })
-
-    it('should evaluate not evaluate global or file scope if the FakerClass has a test scope', () => {
-      const faker = new util.FakerClass('name.lastName', util.fakerScopes.test)
-
-      expect(faker.value('global')).not.to.be.a('string')
-
-      expect(faker.value('file')).not.to.be.a('string')
-
-      expect(faker.value('test')).to.be.a('string')
-    })
-
-    it('should thrown an error if the scope is not valid', () => {
-      const faker = new util.FakerClass('name.lastName', util.fakerScopes.test)
-
-      expect(() => faker.value('jose')).to.throw('Error: jose is not a valid Faker scope. Try one of global,file,test')
-    })
-
-    it('should thrown an error if the scope is not valid in the constructor', () => {
-      expect(() => new util.FakerClass('name.lastName', 'mary')).to.throw('Error: mary is not a valid Faker scope. Try one of global,file,test')
-    })
-  })
 })
