@@ -62,6 +62,5 @@ describe('apiCall', () => {
       expect(body.email).to.be.a('string')
       expect(body.password).not.to.be.a('string')
     })
-
   })
 })
