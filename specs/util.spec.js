@@ -40,6 +40,11 @@ describe('util', () => {
       expect(() => util.loadYamlFile('./fixtures/fixture-invalid.data.yaml')).to.throw(/Error parsing the file .\/fixtures\/fixture-invalid.data.yaml/);
     });
 
+    it('should thrown an error if the file is invalid faker', () => {
+      expect(() => util.loadYamlFile('./fixtures/fixture-with-faker-invalid.data.yaml')).to.throw('cannot resolve a node with !<!faker> explicit tag at line 3, column 1');
+    });
+
+
     it('Should resolve the files and parse yaml into to an object', () => {
       const data = util.loadYamlFile('./fixtures/fixture.data.yaml')
       expect(data).to.deep.equal({

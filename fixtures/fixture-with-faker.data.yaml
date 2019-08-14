@@ -3,5 +3,5 @@ name: !faker ["name.firstName", "global"]
 number: !faker ["random.number"]
 some: 
     anotherOne: 
-        deepDeepValue: !faker ["name.lastName"]
+            deepDeepValue: !faker ["name.lastName"]
 nameInFile: !faker ["name.firstName", "file"]

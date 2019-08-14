@@ -4,7 +4,7 @@ apiCalls:
     header:
       Content-Type: application/json
     data:
-      email: !faker ["internet.email"]
+      email: !faker "internet.email"
       password: !faker ["internet.password", "file"]
     expect:
       status: 200

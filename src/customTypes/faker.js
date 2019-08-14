@@ -35,25 +35,39 @@ FakerClass.prototype.value = function value(scope = GLOBAL) {
   return includes(scopesToEvaluate, this.scope) ? faker.fake(`{{${this.fakerInstruction}}}`) : this
 }
 
+function resolve(data) {
+  return data !== null && data.length > 0
+}
+
+function fakerConstruct(data, scope = GLOBAL) {
+  const isDataArray = isArray(data)
+  const fakerApi = isDataArray ? data[0] : data
+  const fakerScope = isDataArray ? data[1] : scope
+  return new FakerClass(fakerApi, fakerScope)
+}
+
+function represent(obj) {
+  return [obj.fakerInstruction, obj.scope];
+}
+
 const FakerClassType = new YAML.Type('!faker', {
   kind: 'sequence',
-  resolve(data) {
-    return data !== null && data.length > 0
-  },
-
-  construct(data) {
-    return new FakerClass(data[0], data[1])
-  },
-
+  resolve,
+  construct: fakerConstruct,
   instanceOf: FakerClass,
+  represent,
+});
 
-  represent(obj) {
-    return [obj.fakerInstruction, obj.scope];
-  },
+const FakerClassTypeScalar = new YAML.Type('!faker', {
+  kind: 'scalar',
+  resolve,
+  construct: fakerConstruct,
+  instanceOf: FakerClass,
+  represent,
 });
 
 
-const FAKER_SCHEMA = YAML.Schema.create([FakerClassType])
+const FAKER_SCHEMA = YAML.Schema.create([FakerClassType, FakerClassTypeScalar])
 
 function isFaker(data) {
   return (data instanceof FakerClass) && data.value && isFunction(data.value)
