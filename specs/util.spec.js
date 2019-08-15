@@ -44,6 +44,10 @@ describe('util', () => {
       expect(() => util.loadYamlFile('./fixtures/fixture-with-faker-invalid.data.yaml')).to.throw('cannot resolve a node with !<!faker> explicit tag at line 3, column 1');
     });
 
+    it('should thrown an error if the file is invalid faker scope', () => {
+      expect(() => util.loadYamlFile('./fixtures/fixture-with-faker-invalid-scope.data.yaml')).to.throw('Error parsing the file ./fixtures/fixture-with-faker-invalid-scope.data.yaml: Error: wrong-scope is not a valid Faker scope. Try one of global,file,test');
+    });
+
 
     it('Should resolve the files and parse yaml into to an object', () => {
       const data = util.loadYamlFile('./fixtures/fixture.data.yaml')

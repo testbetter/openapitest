@@ -14,6 +14,7 @@ const isObj = value => isObject(value) && !isFunction(value)
 
 const KEYS_TO_IGNORE = ['before', 'after']
 
+class YamlParsingError extends Error {}
 
 function evaluateData(data) {
   if (isFaker(data)) {
@@ -36,7 +37,7 @@ function loadYamlFile(filePath) {
     const yamlDataEvaluated = evaluateData(parsedData)
     return yamlDataEvaluated
   } catch (e) {
-    throw new Error(`Error parsing the file ${filePath}: ${e.message}`)
+    throw new YamlParsingError(`Error parsing the file ${filePath}: ${e.message}`)
   }
 }
 
@@ -63,4 +64,5 @@ module.exports = {
   loadYamlFile,
   evaluateData,
   loadFile,
+  YamlParsingError,
 }

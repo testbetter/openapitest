@@ -60,6 +60,8 @@ describe('apiCall', () => {
       const apiCall = first(apiCallConfig.apiCalls)
       const body = apiCall.data
       expect(body.email).to.be.a('string')
+      expect(body.email).not.to.have.string('!faker')
+
       expect(body.password).not.to.be.a('string')
     })
   })

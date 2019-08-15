@@ -16,8 +16,10 @@ describe('FakerClass', () => {
     expect(faker.value('global')).not.to.be.a('string')
 
     expect(faker.value('file')).to.be.a('string')
+    expect(faker.value('file')).not.to.have.string('!faker')
 
     expect(faker.value('test')).to.be.a('string')
+    expect(faker.value('test')).not.to.have.string('!faker')
   })
 
   it('should evaluate not evaluate global or file scope if the FakerClass has a test scope', () => {
@@ -28,6 +30,7 @@ describe('FakerClass', () => {
     expect(faker.value('file')).not.to.be.a('string')
 
     expect(faker.value('test')).to.be.a('string')
+    expect(faker.value('test')).not.to.have.string('!faker')
   })
 
   it('should thrown an error if the scope is not valid', () => {
