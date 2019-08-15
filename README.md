@@ -1,8 +1,9 @@
 # Openapitest Framework
+
 The purpose of this openapitest framework is to simplify authoring, organizing, executing, and reporting result of API tests using API specification. It runs on node.js and distributed via npm. Add this module to your node.js project as a development dependency and start writing API or Integration tests using YAML language.
 
 
-[![Build Status](https://travis-ci.org/mateusfreira/openapitest.svg?branch=master)](https://travis-ci.org/mateusfreira/openapitest)
+[![Build Status](https://travis-ci.org/testbetter/openapitest.svg?branch=master)](https://travis-ci.org/testbetter/openapitest)
 
 ### Installation
 ----
@@ -499,4 +500,43 @@ tests:
     - logout.href: to.contain /users/logout
 
 ```
+<br /><br />
+
+## Fake data
+Sometime you may want to randomize the tests to create more realistic Test Scenarios. For that, we provide an   Out of
+the box [Faker.js API](http://marak.github.io/faker.js/index.html). 
+
+Faker is a massive amount of fake data generator.
+All you need to do is to add in any field the type `!faker ["faker.api.you.want", "scope"]`, and it will be replaced by the randomized value. Next, we are going to present some examples, if you need the complete documentation, please read [Faker.js
+docs](http://marak.github.io/faker.js/index.html).
+
+```yaml
+apiCalls:
+  name: login to the system
+  swagger:
+  - name: Login fail - try with wrong password
+    call: post_users_login
+    data:
+      email: !faker ["internet.email"]
+      password: !faker ["internet.password"]
+    query:
+      allow-redirect: 0
+    expect:
+      status: 403
+      error: Forbidden
+```
+
+In the example above, the fields, `email` and `password` will be diferent for each test execution, onde Faker.js will
+generate a diferent valid email for each time it runs.
+
+## Fake data scope
+
+
+There are tree scopes for the `!faker` calls, they are `global`, `file` or `test`. If you do not provide a scope, the
+framework will use `global` as default. 
+
+* Global scope will be evaluated once the file is loaded, and therefore will not change in the all test execution
+* File scope will be evaluated for before start the test, so it will have a different value for each test execution
+* Test scope will be evaluated for before start the `it` execution, so it will have a different value for each spec
+
 <br /><br />

@@ -3,13 +3,23 @@ const YAML = require('js-yaml')
 const {
   isFunction, includes, set, isObject, find, endsWith,
 } = require('lodash')
+const {
+  isFaker,
+  evaluateFaker,
+  fakerScopes,
+  FAKER_SCHEMA,
+} = require('./customTypes/faker.js')
 
 const isObj = value => isObject(value) && !isFunction(value)
 
 const KEYS_TO_IGNORE = ['before', 'after']
 
+class YamlParsingError extends Error {}
 
 function evaluateData(data) {
+  if (isFaker(data)) {
+    return evaluateFaker(data, fakerScopes.global)
+  }
   const keys = Object.keys(data)
   return keys.reduce((obj, key) => {
     const value = data[key]
@@ -23,11 +33,11 @@ function evaluateData(data) {
 function loadYamlFile(filePath) {
   const fileText = fs.readFileSync(filePath, 'utf8')
   try {
-    const parsedData = YAML.load(fileText)
+    const parsedData = YAML.load(fileText, { schema: FAKER_SCHEMA })
     const yamlDataEvaluated = evaluateData(parsedData)
     return yamlDataEvaluated
   } catch (e) {
-    throw new Error(`Error parsing the file ${filePath}: ${e.message}`)
+    throw new YamlParsingError(`Error parsing the file ${filePath}: ${e.message}`)
   }
 }
 
@@ -54,4 +64,5 @@ module.exports = {
   loadYamlFile,
   evaluateData,
   loadFile,
+  YamlParsingError,
 }

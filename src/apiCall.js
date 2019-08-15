@@ -1,8 +1,9 @@
 const _ = require('lodash')
 const objectPath = require('object-path')
-const { expect } = require('chai');
+const { expect } = require('chai')
 
 const { loadYamlFile } = require('./util.js')
+const { evaluateFaker, fakerScopes } = require('./customTypes/faker.js')
 const SuperClient = require('./superClient')
 
 const processedExpectations = ['status', 'json', 'headers', 'error']
@@ -23,7 +24,6 @@ function getItFunction(req) {
 
 module.exports = function apiCall(file, apiPort) {
   const config = init(file)
-
   const openSpec = apiPort.get('OPENAPI_SPEC')
   const operations = apiPort.get('OPENAPI_OPERATIONS')
 
@@ -42,10 +42,16 @@ module.exports = function apiCall(file, apiPort) {
     })
   })
 
-  config.apiCalls.swagger.forEach((req) => {
-    const itMethod = getItFunction(req);
+  const fileEvaluator = _.ary(_.partialRight(evaluateFaker, fakerScopes.file), 1);
 
-    itMethod(req.name || req.call, async function itFn() {
+  const swaggerParserd = config.apiCalls.swagger
+    .map(fileEvaluator)
+
+  swaggerParserd.forEach((_req) => {
+    const itMethod = getItFunction(_req);
+
+    itMethod(_req.name || _req.call, async function itFn() {
+      const req = evaluateFaker(_req, fakerScopes.test)
       this.timeout(apiPort.get('TIMEOUT'))
 
       if (!operationIds[req.call]) {
@@ -81,6 +87,7 @@ module.exports = function apiCall(file, apiPort) {
       const save = req.save || {}
 
       try {
+        allReqData = evaluateFaker(allReqData, fakerScopes.test)
         if (req.before && _.isFunction(req.before)) {
           req.before.call(req, {
             apiPort,
@@ -175,6 +182,7 @@ module.exports = function apiCall(file, apiPort) {
       }
     })
   })
+  return config
 }
 
 function init(file) {

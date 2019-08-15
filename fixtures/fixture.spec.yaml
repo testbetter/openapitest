@@ -1,0 +1,24 @@
+apiCalls:
+  - name: Login - success
+    call: post_users_login
+    header:
+      Content-Type: application/json
+    data:
+      email: !faker "internet.email"
+      password: !faker ["internet.password", "file"]
+    expect:
+      status: 200
+      json:
+        - user.status: ENABLED
+    save:
+      userResponse: json
+
+
+tests:
+  - name: Checking login response
+    expects:
+      - userResponse.message: to.be User logged Successfully
+
+  - name: User information exist
+    expects:
+      - userResponse: to.have.key user

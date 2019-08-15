@@ -4,7 +4,7 @@ const expect = require('expect.js')
 const fs = require('fs')
 const path = require('path')
 const klawSync = require('klaw-sync')
-const { loadFile } = require('./util.js')
+const { loadFile, YamlParsingError } = require('./util.js')
 
 const currentDir = process.cwd()
 
@@ -244,6 +244,9 @@ class ApiPort {
           } catch (e) {
             delete this.apiPort.$file[fileName]
             // Ignored here if not found will re-throw the error in the end of this loop
+            if (e instanceof YamlParsingError) {
+              throw e
+            }
           }
         }
       }
