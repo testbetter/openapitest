@@ -8,16 +8,16 @@ const SuperClient = require('./superClient')
 
 const processedExpectations = ['status', 'json', 'headers', 'error']
 
-function getItFunction(req) {
+function getItFunction(req, itApi = it) {
   const useOnly = req.only
   const useSkip = req.skip
-  let itMethod = it
+  let itMethod = itApi
   if (useOnly) {
-    itMethod = it.only
+    itMethod = itApi.only
   }
 
   if (useSkip) {
-    itMethod = it.skip
+    itMethod = itApi.skip
   }
   return itMethod
 }
@@ -26,7 +26,7 @@ function getItName(req) {
   return req.name || req.call
 }
 
-module.exports = function apiCall(file, apiPort) {
+module.exports = function apiCall(file, apiPort, itApi = it) {
   const config = init(file)
   const openSpec = apiPort.get('OPENAPI_SPEC')
   const operations = apiPort.get('OPENAPI_OPERATIONS')
@@ -62,7 +62,7 @@ module.exports = function apiCall(file, apiPort) {
     })
 
     requests.forEach((_req) => {
-      const itMethod = getItFunction(_req);
+      const itMethod = getItFunction(_req, itApi);
 
       itMethod(_req.itText, async function itFn() {
         const req = evaluateFaker(_req, fakerScopes.test)

@@ -1,6 +1,7 @@
 apiCalls:
     swagger:
       - name: Login - success
+        only: true
         call: post_users_login
         header:
           Content-Type: application/json

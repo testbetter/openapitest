@@ -1,6 +1,7 @@
 apiCalls:
     swagger:
       - name: Login - success
+        repeat: 3
         call: post_users_login
         header:
           Content-Type: application/json
