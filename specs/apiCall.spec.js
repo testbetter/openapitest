@@ -86,7 +86,7 @@ describe('apiCall', () => {
       sinon.assert.notCalled(fakeSkip)
     })
 
-    it('Should call the skip method if the only tag is present', () => {
+    it('Should call the skip method if the skip tag is present', () => {
       const fakeSkip = sinon.spy()
       const fakeOnly = sinon.spy()
       ApiCall('./fixtures/fixture.skip.spec.yaml', apiPort, {
