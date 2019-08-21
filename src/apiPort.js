@@ -4,7 +4,7 @@ const expect = require('expect.js')
 const fs = require('fs')
 const path = require('path')
 const klawSync = require('klaw-sync')
-const { loadYamlFile } = require('./util.js')
+const { loadFile, YamlParsingError } = require('./util.js')
 
 const currentDir = process.cwd()
 
@@ -18,16 +18,6 @@ function getLocalDir(dir, required = true) {
     return undefined
   }
   return localDir
-}
-
-function loadFile(filePath) {
-  let fileData;
-  if (fs.existsSync(`${filePath}.js`)) {
-    fileData = require(`${filePath}.js`) // eslint-disable-line import/no-dynamic-require, global-require
-  } if (fs.existsSync(`${filePath}.yaml`)) {
-    fileData = loadYamlFile(`${filePath}.yaml`)
-  }
-  return fileData;
 }
 
 function parseOpValue(expectationValue) {
@@ -245,10 +235,18 @@ class ApiPort {
       for (const testDataPath of lookIn) {
         if (testDataPath) {
           const filePath = `${testDataPath}/${fileName}.data`
-          const fileData = loadFile(filePath)
-          if (fileData) {
-            this.apiPort.$file[fileName] = fileData
-            break
+          try {
+            const fileData = loadFile(filePath)
+            if (fileData) {
+              this.apiPort.$file[fileName] = fileData
+              break
+            }
+          } catch (e) {
+            delete this.apiPort.$file[fileName]
+            // Ignored here if not found will re-throw the error in the end of this loop
+            if (e instanceof YamlParsingError) {
+              throw e
+            }
           }
         }
       }

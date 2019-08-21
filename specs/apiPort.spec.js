@@ -21,7 +21,18 @@ describe('apiPort', () => {
         value: 123,
       })
     })
+
+    it('Should resolve faker values', () => {
+      const apiPort = new ApiPort()
+      apiPort.init()
+      const data = apiPort.getDataFromFile('fixture-with-faker')
+      expect(data.name).to.be.a('string')
+      expect(parseInt(data.number, 10)).to.be.a('number')
+      expect(data).have.nested.property('some.anotherOne.deepDeepValue').and.to.be.a('string')
+      expect(data).have.nested.property('nameInFile').and.not.to.be.a('string')
+    })
   })
+
 
   describe('set', () => {
     it('should set a value and be able to get it', () => {
@@ -102,6 +113,7 @@ describe('apiPort', () => {
       apiPort.expectationOn(json, { deployment: 'to.be.equal hello' })
       apiPort.expectationOn(json, { isUndefined: 'to.not.be.ok' })
     })
+
     it('should throw expected exceptions properly', () => {
       const apiPort = new ApiPort()
       const json = {
