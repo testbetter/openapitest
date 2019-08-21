@@ -100,6 +100,7 @@ Example: `login.data.yaml`
 		* [print](#print)
 		* [only](#only)
 		* [skip](#skip)
+		* [repeat](#repeat)
 		* [before](#before)
 		* [after](#after)
 		* [expect](#expect)
@@ -256,6 +257,15 @@ If you want to skip one or more tests, use the `skip` Example:
 ```sh
 skip: true
 ```
+<br />
+
+**<a name='repeat'>`repeat:`</a>**
+If you want to run a test more than once without repeating the all test data you can use the `repeat` Example:
+```sh
+repeat: 10 
+```
+In the case above the same test would be repeated 10 times
+
 <br />
 
 **<a name='before'>`before:`</a>**

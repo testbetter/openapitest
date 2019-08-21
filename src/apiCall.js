@@ -8,21 +8,25 @@ const SuperClient = require('./superClient')
 
 const processedExpectations = ['status', 'json', 'headers', 'error']
 
-function getItFunction(req) {
+function getItFunction(req, itApi = it) {
   const useOnly = req.only
   const useSkip = req.skip
-  let itMethod = it
+  let itMethod = itApi
   if (useOnly) {
-    itMethod = it.only
+    itMethod = itApi.only
   }
 
   if (useSkip) {
-    itMethod = it.skip
+    itMethod = itApi.skip
   }
   return itMethod
 }
 
-module.exports = function apiCall(file, apiPort) {
+function getItName(req) {
+  return req.name || req.call
+}
+
+module.exports = function apiCall(file, apiPort, itApi = it) {
   const config = init(file)
   const openSpec = apiPort.get('OPENAPI_SPEC')
   const operations = apiPort.get('OPENAPI_OPERATIONS')
@@ -47,139 +51,150 @@ module.exports = function apiCall(file, apiPort) {
   const swaggerParserd = config.apiCalls.swagger
     .map(fileEvaluator)
 
-  swaggerParserd.forEach((_req) => {
-    const itMethod = getItFunction(_req);
+  swaggerParserd.forEach((reqParams) => {
+    const repeat = reqParams.repeat || 1
+    const requests = _.times(repeat)
+      .map(() => _.clone(reqParams))
 
-    itMethod(_req.name || _req.call, async function itFn() {
-      const req = evaluateFaker(_req, fakerScopes.test)
-      this.timeout(apiPort.get('TIMEOUT'))
+    requests.forEach((req, i) => {
+      const name = getItName(req)
+      req.itText = repeat === 1 ? name : `${name} - ${i}`
+    })
 
-      if (!operationIds[req.call]) {
-        throw new Error(`No swagger operation exists with operationId "${req.call}"`)
-      }
+    requests.forEach((_req) => {
+      const itMethod = getItFunction(_req, itApi);
 
-      const params = req.parameters || ''
-      if (params) {
-        apiPort.validateParams(operations[req.call].parameters || [], params)
-      }
+      itMethod(_req.itText, async function itFn() {
+        const req = evaluateFaker(_req, fakerScopes.test)
+        this.timeout(apiPort.get('TIMEOUT'))
 
-      let allReqData = {}
-      const reqData = req.data || {}
-      let basicAuth = req.basicAuth || {}
-      if (basicAuth.$file) {
-        basicAuth = apiPort.getDataFromFile(basicAuth.$file, file)
-        basicAuth = apiPort.resolveObject(basicAuth)
-        delete basicAuth.$file
-      }
-
-      req.header = apiPort.resolveObject(req.header)
-      apiPort.resolveObject(req.query)
-
-      if (reqData.$file) {
-        const reqDataFile = apiPort.getDataFromFile(reqData.$file, file)
-        allReqData = apiPort.resolveObject(reqDataFile)
-        delete reqData.$file
-      } else {
-        allReqData = apiPort.resolveObject(reqData)
-      }
-
-      const isResPrint = req.print || false
-      const save = req.save || {}
-
-      try {
-        allReqData = evaluateFaker(allReqData, fakerScopes.test)
-        if (req.before && _.isFunction(req.before)) {
-          req.before.call(req, {
-            apiPort,
-            expect,
-            specs: config.apiCalls.swagger,
-            op: operations[req.call],
-            body: allReqData,
-            basicAuth,
-          });
-        }
-        const res = await SuperClient(apiPort, req, operations[req.call], allReqData, basicAuth)
-
-        if (req.after && _.isFunction(req.after)) {
-          req.after.call(req, {
-            apiPort,
-            specs: config.apiCalls.swagger,
-            res,
-            expect,
-            op: operations[req.call],
-            body: allReqData,
-            basicAuth,
-          });
-        }
-        if (isResPrint) {
-          varDump('Response= ', res, true)
+        if (!operationIds[req.call]) {
+          throw new Error(`No swagger operation exists with operationId "${req.call}"`)
         }
 
-        if (req.expect) {
-          verifyExpectStructure(req.expect)
-          apiPort.expectStatus(req.expect.status, res.status)
-
-          if (req.expect.text) {
-            apiPort.expectationOn(res.text, req.expect.text)
-          }
-
-          if (res.text && isJson(res.text)) {
-            res.json = JSON.parse(res.text)
-          }
-
-          if (req.expect.json) {
-            for (const expectation of req.expect.json) {
-              apiPort.expectationOn(res.json, expectation)
-            }
-          }
-
-          if (req.expect.headers) {
-            for (const expectedHeader of req.expect.headers) {
-              apiPort.expectationOn(res.header, expectedHeader)
-            }
-          }
+        const params = req.parameters || ''
+        if (params) {
+          apiPort.validateParams(operations[req.call].parameters || [], params)
         }
 
-        for (const varName of Object.keys(save)) {
-          if (typeof save[varName] === 'object') {
-            const savedValue = evaluateResponseData(res, save[varName])
-            apiPort.set(varName, savedValue)
-            if (isResPrint) {
-              console.log(`${varName} = `, JSON.stringify(savedValue))
-            }
-          } else if (save[varName].startsWith('$file.')) {
-            apiPort.set(varName, apiPort.resolve(save[varName]))
-            if (isResPrint) {
-              console.log(`${varName} = `, JSON.stringify(apiPort.resolve(save[varName])))
-            }
-          } else {
-            const value = getValueFromResponse(res, save[varName])
-            apiPort.set(varName, value, false)
-            if (isResPrint) {
-              console.log(`${varName} = `, JSON.stringify(value))
-            }
-          }
+        let allReqData = {}
+        const reqData = req.data || {}
+        let basicAuth = req.basicAuth || {}
+        if (basicAuth.$file) {
+          basicAuth = apiPort.getDataFromFile(basicAuth.$file, file)
+          basicAuth = apiPort.resolveObject(basicAuth)
+          delete basicAuth.$file
         }
-      } catch (err) {
-        if (isResPrint) {
-          varDump('Error= ', err, true)
-        }
-        for (const varName of Object.keys(save)) {
-          if (typeof save[varName] !== 'object' && (save[varName].startsWith('$file.') || save[varName].startsWith('$config.'))) {
-            apiPort.set(varName, apiPort.resolve(save[varName]))
-            if (isResPrint) {
-              console.log(`${varName} = `, JSON.stringify(apiPort.resolve(save[varName])))
-            }
-          }
-        }
-        if ((req.expect || {}).status && err.status) {
-          apiPort.expectStatus(req.expect.status, err.status)
-        } else if ((req.expect || {}).error && err.error) {
-          apiPort.expectStatus(req.expect.error, err.error)
+
+        req.header = apiPort.resolveObject(req.header)
+        apiPort.resolveObject(req.query)
+
+        if (reqData.$file) {
+          const reqDataFile = apiPort.getDataFromFile(reqData.$file, file)
+          allReqData = apiPort.resolveObject(reqDataFile)
+          delete reqData.$file
         } else {
-          throw err
+          allReqData = apiPort.resolveObject(reqData)
         }
-      }
+
+        const isResPrint = req.print || false
+        const save = req.save || {}
+
+        try {
+          allReqData = evaluateFaker(allReqData, fakerScopes.test)
+          if (req.before && _.isFunction(req.before)) {
+            req.before.call(req, {
+              apiPort,
+              expect,
+              specs: config.apiCalls.swagger,
+              op: operations[req.call],
+              body: allReqData,
+              basicAuth,
+            });
+          }
+          const res = await SuperClient(apiPort, req, operations[req.call], allReqData, basicAuth)
+
+          if (req.after && _.isFunction(req.after)) {
+            req.after.call(req, {
+              apiPort,
+              specs: config.apiCalls.swagger,
+              res,
+              expect,
+              op: operations[req.call],
+              body: allReqData,
+              basicAuth,
+            });
+          }
+          if (isResPrint) {
+            varDump('Response= ', res, true)
+          }
+
+          if (req.expect) {
+            verifyExpectStructure(req.expect)
+            apiPort.expectStatus(req.expect.status, res.status)
+
+            if (req.expect.text) {
+              apiPort.expectationOn(res.text, req.expect.text)
+            }
+
+            if (res.text && isJson(res.text)) {
+              res.json = JSON.parse(res.text)
+            }
+
+            if (req.expect.json) {
+              for (const expectation of req.expect.json) {
+                apiPort.expectationOn(res.json, expectation)
+              }
+            }
+
+            if (req.expect.headers) {
+              for (const expectedHeader of req.expect.headers) {
+                apiPort.expectationOn(res.header, expectedHeader)
+              }
+            }
+          }
+
+          for (const varName of Object.keys(save)) {
+            if (typeof save[varName] === 'object') {
+              const savedValue = evaluateResponseData(res, save[varName])
+              apiPort.set(varName, savedValue)
+              if (isResPrint) {
+                console.log(`${varName} = `, JSON.stringify(savedValue))
+              }
+            } else if (save[varName].startsWith('$file.')) {
+              apiPort.set(varName, apiPort.resolve(save[varName]))
+              if (isResPrint) {
+                console.log(`${varName} = `, JSON.stringify(apiPort.resolve(save[varName])))
+              }
+            } else {
+              const value = getValueFromResponse(res, save[varName])
+              apiPort.set(varName, value, false)
+              if (isResPrint) {
+                console.log(`${varName} = `, JSON.stringify(value))
+              }
+            }
+          }
+        } catch (err) {
+          if (isResPrint) {
+            varDump('Error= ', err, true)
+          }
+          for (const varName of Object.keys(save)) {
+            if (typeof save[varName] !== 'object' && (save[varName].startsWith('$file.') || save[varName].startsWith('$config.'))) {
+              apiPort.set(varName, apiPort.resolve(save[varName]))
+              if (isResPrint) {
+                console.log(`${varName} = `, JSON.stringify(apiPort.resolve(save[varName])))
+              }
+            }
+          }
+          if ((req.expect || {}).status && err.status) {
+            apiPort.expectStatus(req.expect.status, err.status)
+          } else if ((req.expect || {}).error && err.error) {
+            apiPort.expectStatus(req.expect.error, err.error)
+          } else {
+            throw err
+          }
+        }
+      })
     })
   })
   return config
