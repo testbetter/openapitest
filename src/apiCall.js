@@ -58,7 +58,7 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
 
     requests.forEach((req, i) => {
       const name = getItName(req)
-      req.itText = repeat === 1 ? name : `${name} - ${i}`
+      req.itText = repeat === 1 ? name : `${name} - ${i + 1}`
     })
 
     requests.forEach((_req) => {

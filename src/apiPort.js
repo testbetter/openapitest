@@ -228,9 +228,10 @@ class ApiPort {
     const parts = fileAndKeyName.split('.')
     const fileName = parts[0]
     const objPath = _.join(parts.slice(1), '.')
+    const fileDataDir = path.join(fileDir, 'data')
 
     if (!this.apiPort.$file[fileName]) {
-      const lookIn = [this.get('TEST_DATA_PATH'), fileDir, this.get('SHARED_TEST_DATA')]
+      const lookIn = [this.get('TEST_DATA_PATH'), fileDir, fileDataDir, this.get('SHARED_TEST_DATA')]
 
       for (const testDataPath of lookIn) {
         if (testDataPath) {
