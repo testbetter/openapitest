@@ -70,9 +70,9 @@ describe('apiCall', () => {
       const fakeIt = sinon.spy()
       ApiCall('./fixtures/fixture.repeat.spec.yaml', apiPort, fakeIt)
       sinon.assert.callCount(fakeIt, 3)
-      sinon.assert.calledWith(fakeIt, 'Login - success - 0')
       sinon.assert.calledWith(fakeIt, 'Login - success - 1')
       sinon.assert.calledWith(fakeIt, 'Login - success - 2')
+      sinon.assert.calledWith(fakeIt, 'Login - success - 3')
     })
 
     it('Should call the only method if the only tag is present', () => {
