@@ -175,6 +175,18 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
             }
           }
         } catch (err) {
+          if (req.after && _.isFunction(req.after)) {
+            req.after.call(req, {
+              apiPort,
+              specs: config.apiCalls.swagger,
+              res: {},
+              expect,
+              op: operations[req.call],
+              body: allReqData,
+              error: err,
+              basicAuth,
+            });
+          }
           if (isResPrint) {
             varDump('Error= ', err, true)
           }

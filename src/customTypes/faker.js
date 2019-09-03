@@ -74,6 +74,10 @@ function isFaker(data) {
 }
 
 function evaluateFaker(data, scope) {
+  if (isFunction(data)) {
+    return data
+  }
+
   if (isFaker(data)) {
     const resulvedValue = data.value(scope)
     return resulvedValue
