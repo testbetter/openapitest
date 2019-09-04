@@ -26,6 +26,10 @@ program
         'Global Test data config folder relative/ absolute path.  e.g: <path>/global-config'
     )
     .option(
+        '-g, --globalConfig [path]',
+        'Global Test data config folder relative/ absolute path.  e.g: <path>/global-config'
+    )
+    .option(
         '-r, --report <n>',
         'Will generate the html report or not.  e.g: 1 or 0',
         parseInt
@@ -45,7 +49,8 @@ checkRequired(program, 'url')
 
 process.env.OPENAPI_PATH = program.openapi
 process.env.API_TESTS_PATH = program.testDir
-process.env.GLOBAL_DATA_CONFIG = program.dataConfig
+process.env.GLOBAL_DATA_CONFIG = program.globalConfig
+process.env.COMMON_DATA_CONFIG = program.dataConfig
 
 if (program.dataDir) {
     checkExists(program.dataDir, 'Data directory')

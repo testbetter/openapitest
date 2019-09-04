@@ -51,6 +51,7 @@ class ApiPort {
     this.apiPort = {}
     this.currentFile = ''
     this.globalDataConfig = []
+    this.commonConfig = []
   }
 
   init() {
@@ -60,6 +61,7 @@ class ApiPort {
 
     this.set('API_TESTS_PATH', process.env.API_TESTS_PATH || getLocalDir('integration/test-spec'))
     this.set('GLOBAL_DATA_CONFIG', process.env.GLOBAL_DATA_CONFIG, false)
+    this.set('COMMON_DATA_CONFIG', process.env.COMMON_DATA_CONFIG, false)
 
     if (process.env.GLOBAL_DATA_CONFIG) {
       const globalDataConfigFolderPath = getAbsolutePath(process.env.GLOBAL_DATA_CONFIG)
@@ -71,6 +73,20 @@ class ApiPort {
         const fileData = loadFile(filePath, true)
         if (fileData) {
           this.globalDataConfig[fileName] = fileData
+        }
+      })
+    }
+
+    if (process.env.COMMON_DATA_CONFIG) {
+      const dataConfigFolderPath = getAbsolutePath(process.env.COMMON_DATA_CONFIG)
+      const dataConfigFolderPaths = klawSync(dataConfigFolderPath, { nodir: true })
+      dataConfigFolderPaths.forEach((file) => {
+        const filePath = file.path
+        let fileName = path.basename(filePath, path.extname(filePath));
+        fileName = fileName.replace('.config', '')
+        const fileData = loadFile(filePath, true)
+        if (fileData) {
+          this.commonConfig[fileName] = fileData
         }
       })
     }
@@ -182,7 +198,12 @@ class ApiPort {
       const parts = fileAndKeyName.split('.')
       const fileName = parts.length > 0 ? parts[0] : ''
       const keyName = parts.length > 0 ? parts[1] : ''
-      return fileName && keyName ? this.globalDataConfig[fileName][keyName] : ''
+      let returnValue = _.get(this.commonConfig, [fileName, keyName], '')
+      if(!returnValue) {
+        returnValue = _.get(this.globalDataConfig, [fileName, keyName], '')
+      }
+      
+      return returnValue
     }
 
     const matches = valueStr.match(/\${[^.][^}]+}/g)
