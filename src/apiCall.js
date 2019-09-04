@@ -122,6 +122,7 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
               expect,
               op: operations[req.call],
               body: allReqData,
+              error: {},
               basicAuth,
             });
           }

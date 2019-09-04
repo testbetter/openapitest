@@ -297,7 +297,8 @@ With its default "BDD"-style interface, openapitest, provides the hooks after, t
 * @param {object|undefined} testData.body the request body to be sent, in get request it may be undefined
 * @param {object} testData.basicAuth auth information to be used in the auth header
 * @param {SuperagentResponse} testData.res server response to full documentation check `http://visionmedia.github.io/superagent/#response-properties`
-* 
+* @param {object} testData.error error object. For successful response, error value will be empty object and other case will get error object
+*
 */
 after: !!js/function "function(testData){  /** runs after the test */;   }"
 ```
