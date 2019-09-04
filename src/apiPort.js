@@ -199,10 +199,9 @@ class ApiPort {
       const fileName = parts.length > 0 ? parts[0] : ''
       const keyName = parts.length > 0 ? parts[1] : ''
       let returnValue = _.get(this.commonConfig, [fileName, keyName], '')
-      if(!returnValue) {
+      if (!returnValue) {
         returnValue = _.get(this.globalDataConfig, [fileName, keyName], '')
       }
-      
       return returnValue
     }
 
