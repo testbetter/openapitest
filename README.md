@@ -17,10 +17,10 @@ The `test-integration` folder is where all YAML test suites name with `.spec.yam
 ```
 ProjectCoolThing
 ├─ test-integration
-   ├─ global-config
-   |   ├─ global.config.js
+   ├─ config
+   |   ├─ common.config.js
    |   └─ testenvironment.config.yaml
-   ├─ global-data
+   ├─ data
    |   ├─ testusers.data.js
    |   └─ testenvironment.data.yaml
    └─ test-suites
@@ -63,7 +63,8 @@ Options:
   -t, --testDir  [path]    Test folder relative/ absolute path.  e.g: <path>/test-spec
   -d, --dataDir  [path]    Test data folder. Defaults to a folder called "data" that is a sibling to the test-suites folder
   -s, --sharedir [path]    Shared Test data folder relative/ absolute path.  e.g: <path>/share_data
-  -c, --dataConfig [path]  Global Test data config folder relative/ absolute path.  e.g: <path>/global-config
+  -c, --dataConfig [path]  Common Test data config folder relative/ absolute path.  e.g: <path>/config
+  -g, --globalConfig [path]  Global Test data config folder relative/ absolute path.  e.g: <path>/global-config
   -u, --url [url]          Server URL. e.g: http://localhost:9000
   -r, --report <n>         Will generate the html report or not. Default 0; e.g: 1 or 0
   -h, --help               output usage information
@@ -81,6 +82,13 @@ Example: `user.spec.yaml`
 **Test data file name:** should be ending with `.data.yaml` or `.data.js`. 
 
 Example: `login.data.yaml`
+
+### Config priority:
+---
+We have 3 types of config support here:
+* **Config:** This one will stay inside the test folder. If we have same config name, framework will take this value as first priority. 
+* **Data Config:** This one will stay outside of test folder. If we have same config name, framework will take this value as second priority.
+* **Global Config:** Any where.  If we have same config name, framework will take this value as last priority.
 
 ### Tags:
 ----
@@ -151,7 +159,7 @@ We can define parameter under the `parameters` tag. There is no file support her
 parameters: 	
     userId: 123456
     otherId: ${otherId}
-    other: $config.global.other
+    other: $config.common.other
 ```
 <br />
 
@@ -162,7 +170,7 @@ If we need to send any header information during the endpoint call, we can defin
 header:
   Accept: application/json
   Authorization: Bearer sessionToken
-  other: $config.global.other
+  other: $config.common.other
 ```
 <br />
 
@@ -172,7 +180,7 @@ We can define query/ get value under `query` tag. There is no file support here.
 query:
   id: 1212
   otherId: 1234
-  other: $config.global.other
+  other: $config.common.other
 ```
 <br />
 
@@ -184,7 +192,7 @@ query:
 data:
   email: test@localhost.com
   password: "123"
-  other: $config.global.other
+  other: $config.common.other
 ```
 **<a name='dataFile'>`file example:`**</a>
 ```sh
@@ -213,7 +221,7 @@ We can define the basic auth information here. We can set basic auth with 2 form
 basicAuth:
    email: test@localhost.com
    password: "123"
-   other: $config.global.other
+   other: $config.common.other
 ```
 
 **<a name='basicAuthFile'>`file example:`</a>**
@@ -310,7 +318,7 @@ After calling the endpoint, If we want to save response for next endpoint or for
 ```sh
 save:
    sessionToken: json.sessionToken
-   other: $config.global.other
+   other: $config.common.other
 ```
 
 Example: Returning full response
@@ -319,11 +327,11 @@ save:
    userResponse: json
 ```
 
-We can save value from file as well. Example: save `username` from `basicAuth` file. From `global-config` folder. File name will be `global.config.(js/yaml)`
+We can save value from file as well. Example: save `username` from `basicAuth` file. From `config` folder. File name will be `common.config.(js/yaml)`
 ```sh
 save:
    username: $file.basicAuth.email
-   other: $config.global.other
+   other: $config.common.other
 ```
 We can parse any value from response using `regular expression`.
 
