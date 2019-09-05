@@ -49,8 +49,6 @@ checkRequired(program, 'url')
 
 process.env.OPENAPI_PATH = program.openapi
 process.env.API_TESTS_PATH = program.testDir
-process.env.GLOBAL_DATA_CONFIG = program.globalConfig
-process.env.COMMON_DATA_CONFIG = program.dataConfig
 
 if (program.dataDir) {
     checkExists(program.dataDir, 'Data directory')
@@ -62,6 +60,16 @@ if (program.dataDir) {
 if (program.sharedir) {
     checkExists(program.sharedir, 'Common test data directory')
     process.env.SHARED_TEST_DATA = program.sharedir
+}
+
+if (program.globalConfig) {
+    checkExists(program.globalConfig, 'Global config directory')
+    process.env.GLOBAL_DATA_CONFIG = program.globalConfig
+}
+
+if (program.dataConfig) {
+    checkExists(program.dataConfig, 'Common config directory')
+    process.env.COMMON_DATA_CONFIG = program.dataConfig
 }
 
 process.env.API_SERVER_URL = program.url
