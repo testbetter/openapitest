@@ -23,7 +23,7 @@ program
     )
     .option(
         '-c, --dataConfig [path]',
-        'Global Test data config folder relative/ absolute path.  e.g: <path>/global-config'
+        'Common Test data config folder relative/ absolute path.  e.g: <path>/config'
     )
     .option(
         '-g, --globalConfig [path]',
