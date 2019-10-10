@@ -5,13 +5,14 @@ apiCalls:
   - name : get all employees
     call : get_employees
     conditions:
-      - util: 
-        - expect:
-          - status: to.be.eql complete
-        - interval: 5000 #ms
-        - limit: 10
-      - repeat: 100
-      - wait: 1000
+      util: 
+        expect:
+          json:
+            - status: to.be.eql complete
+        interval: 5000 #ms
+        limit: 10
+      repeat: 100
+      wait: 1000
     expect:
       status: 200
       json:

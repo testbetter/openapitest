@@ -1,10 +1,11 @@
-const _ = require("lodash");
-const objectPath = require("object-path");
-const expect = require("expect.js");
-const fs = require("fs");
-const path = require("path");
-const klawSync = require("klaw-sync");
-const { loadFile, YamlParsingError } = require("./util.js");
+/* eslint-disable no-param-reassign */
+const _ = require('lodash');
+const objectPath = require('object-path');
+const expect = require('expect.js');
+const fs = require('fs');
+const path = require('path');
+const klawSync = require('klaw-sync');
+const { loadFile, YamlParsingError } = require('./util.js');
 
 const currentDir = process.cwd();
 
@@ -13,7 +14,7 @@ function getLocalDir(dir, required = true) {
   if (!fs.existsSync(localDir)) {
     if (required) {
       throw new Error(
-        `local directory ${dir} is required for integration testing.`
+        `local directory ${dir} is required for integration testing.`,
       );
     }
     return undefined;
@@ -23,19 +24,19 @@ function getLocalDir(dir, required = true) {
 
 function parseOpValue(expectationValue) {
   if (
-    typeof expectationValue !== "string" ||
-    !expectationValue.startsWith("to.")
+    typeof expectationValue !== 'string'
+    || !expectationValue.startsWith('to.')
   ) {
     return {
-      op: "to.be.equal",
-      value: expectationValue
+      op: 'to.be.equal',
+      value: expectationValue,
     };
   }
 
   // split the string on spaces
-  const parts = expectationValue.split(" ");
+  const parts = expectationValue.split(' ');
   const ret = {
-    op: parts[0]
+    op: parts[0],
   };
 
   if (parts.length > 1) {
@@ -53,39 +54,34 @@ function getAbsolutePath(envPath) {
 class ApiPort {
   constructor() {
     this.apiPort = {};
-    this.currentFile = "";
+    this.currentFile = '';
     this.globalDataConfig = [];
     this.commonConfig = [];
   }
 
   init() {
-    this.set("TIMEOUT", process.env.TIMEOUT || 60000);
+    this.set('TIMEOUT', process.env.TIMEOUT || 60000);
 
-    // Until condition for timeout and retry count
-    this.set("TIMEOUT_UNTIL", 300000);
-    this.set("RETRY_NO", 1000);
-    console.log("=============================================");
-
-    this.set("API_SERVER_URL", process.env.API_SERVER_URL);
+    this.set('API_SERVER_URL', process.env.API_SERVER_URL);
 
     this.set(
-      "API_TESTS_PATH",
-      process.env.API_TESTS_PATH || getLocalDir("integration/test-spec")
+      'API_TESTS_PATH',
+      process.env.API_TESTS_PATH || getLocalDir('integration/test-spec'),
     );
-    this.set("GLOBAL_DATA_CONFIG", process.env.GLOBAL_DATA_CONFIG, false);
-    this.set("COMMON_DATA_CONFIG", process.env.COMMON_DATA_CONFIG, false);
+    this.set('GLOBAL_DATA_CONFIG', process.env.GLOBAL_DATA_CONFIG, false);
+    this.set('COMMON_DATA_CONFIG', process.env.COMMON_DATA_CONFIG, false);
 
     if (process.env.GLOBAL_DATA_CONFIG) {
       const globalDataConfigFolderPath = getAbsolutePath(
-        process.env.GLOBAL_DATA_CONFIG
+        process.env.GLOBAL_DATA_CONFIG,
       );
       const globalDataConfigFolderPaths = klawSync(globalDataConfigFolderPath, {
-        nodir: true
+        nodir: true,
       });
-      globalDataConfigFolderPaths.forEach(file => {
+      globalDataConfigFolderPaths.forEach((file) => {
         const filePath = file.path;
         let fileName = path.basename(filePath, path.extname(filePath));
-        fileName = fileName.replace(".config", "");
+        fileName = fileName.replace('.config', '');
         const fileData = loadFile(filePath, true);
         if (fileData) {
           this.globalDataConfig[fileName] = fileData;
@@ -95,15 +91,15 @@ class ApiPort {
 
     if (process.env.COMMON_DATA_CONFIG) {
       const dataConfigFolderPath = getAbsolutePath(
-        process.env.COMMON_DATA_CONFIG
+        process.env.COMMON_DATA_CONFIG,
       );
       const dataConfigFolderPaths = klawSync(dataConfigFolderPath, {
-        nodir: true
+        nodir: true,
       });
-      dataConfigFolderPaths.forEach(file => {
+      dataConfigFolderPaths.forEach((file) => {
         const filePath = file.path;
         let fileName = path.basename(filePath, path.extname(filePath));
-        fileName = fileName.replace(".config", "");
+        fileName = fileName.replace('.config', '');
         const fileData = loadFile(filePath, true);
         if (fileData) {
           this.commonConfig[fileName] = fileData;
@@ -111,36 +107,36 @@ class ApiPort {
       });
     }
 
-    let openApiPath = "";
+    let openApiPath = '';
     if (process.env.OPENAPI_PATH) {
       openApiPath = getAbsolutePath(process.env.OPENAPI_PATH);
     }
     this.set(
-      "OPENAPI_PATH",
-      openApiPath || getLocalDir("integration/api-docs.json")
+      'OPENAPI_PATH',
+      openApiPath || getLocalDir('integration/api-docs.json'),
     );
 
-    let testDataPath = "";
+    let testDataPath = '';
     if (process.env.TEST_DATA_PATH) {
       testDataPath = getAbsolutePath(process.env.TEST_DATA_PATH);
     }
     this.set(
-      "TEST_DATA_PATH",
-      testDataPath || getLocalDir("integration/data", false),
-      false
+      'TEST_DATA_PATH',
+      testDataPath || getLocalDir('integration/data', false),
+      false,
     );
 
-    let sharedDataPath = "";
+    let sharedDataPath = '';
     if (process.env.SHARED_TEST_DATA) {
       sharedDataPath = getAbsolutePath(process.env.SHARED_TEST_DATA);
     }
-    this.set("SHARED_TEST_DATA", sharedDataPath, false);
+    this.set('SHARED_TEST_DATA', sharedDataPath, false);
 
-    const apis = require(this.get("OPENAPI_PATH")); // eslint-disable-line import/no-dynamic-require, global-require
+    const apis = require(this.get('OPENAPI_PATH')); // eslint-disable-line import/no-dynamic-require, global-require
 
     const operations = {};
 
-    apis.servers[0] = { url: this.get("API_SERVER_URL") };
+    apis.servers[0] = { url: this.get('API_SERVER_URL') };
 
     for (const apiPath of Object.keys(apis.paths)) {
       const params = apis.paths[apiPath].parameters || [];
@@ -154,15 +150,15 @@ class ApiPort {
           operation.parameters = _.unionBy(
             actionObj.parameters,
             params,
-            "name"
+            'name',
           );
           operations[actionObj.operationId] = operation;
         }
       }
     }
 
-    this.set("OPENAPI_SPEC", apis);
-    this.set("OPENAPI_OPERATIONS", operations);
+    this.set('OPENAPI_SPEC', apis);
+    this.set('OPENAPI_OPERATIONS', operations);
   }
 
   reset() {
@@ -190,7 +186,7 @@ class ApiPort {
   }
 
   get(key, defaultValue = null) {
-    return typeof this.apiPort[key] === "undefined"
+    return typeof this.apiPort[key] === 'undefined'
       ? defaultValue
       : this.apiPort[key];
   }
@@ -201,13 +197,13 @@ class ApiPort {
     let exists = true;
 
     if (matches) {
-      matches.forEach(match => {
+      matches.forEach((match) => {
         const repl = objectPath.get(
           this.apiPort,
-          match.substring(2, match.length - 1)
+          match.substring(2, match.length - 1),
         );
 
-        if (typeof repl === "undefined") {
+        if (typeof repl === 'undefined') {
           exists = false;
           return false;
         }
@@ -221,17 +217,17 @@ class ApiPort {
 
   resolve(value) {
     let valueStr = `${value}`;
-    if (valueStr.startsWith("$file.")) {
-      return this.getDataFromFile(valueStr.substring("$file.".length));
+    if (valueStr.startsWith('$file.')) {
+      return this.getDataFromFile(valueStr.substring('$file.'.length));
     }
-    if (valueStr.startsWith("$config.")) {
-      const fileAndKeyName = valueStr.substring("$config.".length);
-      const parts = fileAndKeyName.split(".");
-      const fileName = parts.length > 0 ? parts[0] : "";
-      const keyName = parts.length > 0 ? parts[1] : "";
-      let returnValue = _.get(this.commonConfig, [fileName, keyName], "");
+    if (valueStr.startsWith('$config.')) {
+      const fileAndKeyName = valueStr.substring('$config.'.length);
+      const parts = fileAndKeyName.split('.');
+      const fileName = parts.length > 0 ? parts[0] : '';
+      const keyName = parts.length > 0 ? parts[1] : '';
+      let returnValue = _.get(this.commonConfig, [fileName, keyName], '');
       if (!returnValue) {
-        returnValue = _.get(this.globalDataConfig, [fileName, keyName], "");
+        returnValue = _.get(this.globalDataConfig, [fileName, keyName], '');
       }
       return returnValue;
     }
@@ -248,15 +244,15 @@ class ApiPort {
       if (!replaceStr) {
         throw new Error(`${tokenVar} not found.`);
       }
-      if (typeof replaceStr === "object") {
+      if (typeof replaceStr === 'object') {
         if (valueStr !== match) {
           throw new Error(`Cannot set object in string: ${value}`);
         }
         return replaceStr;
       }
       if (
-        valueStr === match &&
-        (typeof replaceStr === "number" || typeof replaceStr === "boolean")
+        valueStr === match
+        && (typeof replaceStr === 'number' || typeof replaceStr === 'boolean')
       ) {
         return replaceStr;
       }
@@ -277,21 +273,21 @@ class ApiPort {
     }, obj);
   }
 
-  getDataFromFile(fileAndKeyName, file = "") {
+  getDataFromFile(fileAndKeyName, file = '') {
     this.apiPort.$file = this.apiPort.$file || {};
 
     const fileDir = path.parse(file).dir;
-    const parts = fileAndKeyName.split(".");
+    const parts = fileAndKeyName.split('.');
     const fileName = parts[0];
-    const objPath = _.join(parts.slice(1), ".");
-    const fileDataDir = path.join(fileDir, "data");
+    const objPath = _.join(parts.slice(1), '.');
+    const fileDataDir = path.join(fileDir, 'data');
 
     if (!this.apiPort.$file[fileName]) {
       const lookIn = [
-        this.get("TEST_DATA_PATH"),
+        this.get('TEST_DATA_PATH'),
         fileDir,
         fileDataDir,
-        this.get("SHARED_TEST_DATA")
+        this.get('SHARED_TEST_DATA'),
       ];
 
       for (const testDataPath of lookIn) {
@@ -315,7 +311,7 @@ class ApiPort {
 
       if (!this.apiPort.$file[fileName]) {
         throw new Error(
-          `Cannot find test data file: ${fileName}.data.(js|yaml) in any of: ${lookIn}`
+          `Cannot find test data file: ${fileName}.data.(js|yaml) in any of: ${lookIn}`,
         );
       }
     }
@@ -327,18 +323,18 @@ class ApiPort {
 
   validateParams(allParams, reqParams) {
     for (const key of Object.keys(reqParams)) {
-      if (_.findIndex(allParams, { name: key, in: "path" }) === -1) {
+      if (_.findIndex(allParams, { name: key, in: 'path' }) === -1) {
         throw new Error(`Parameter '${key}' does not exist`);
       } else {
         allParams = _.differenceBy(
           allParams,
-          [{ name: key, in: "path" }],
-          "name"
+          [{ name: key, in: 'path' }],
+          'name',
         ); // eslint-disable-line
       }
     }
 
-    const foundIndex = _.findIndex(allParams, { in: "path", required: true });
+    const foundIndex = _.findIndex(allParams, { in: 'path', required: true });
     if (allParams && foundIndex !== -1) {
       throw new Error(`Parameter '${allParams.foundIndex.name}' is required`);
     }
@@ -354,7 +350,7 @@ class ApiPort {
     }
   }
 
-  expectationOn(responseObject, expectation) {
+  expectationOn(responseObject, expectation, isCheck = false) {
     const keys = Array.from(Object.keys(expectation));
     if (keys.length !== 1) {
       throw new Error(`Expectation can only have one key. Found: ${keys}`);
@@ -370,17 +366,34 @@ class ApiPort {
     // const op = objectPath(expect(actualVal), rest[remainingKeys[0]])
     // expect(op).to.be.a('function')
     // op(value)
-    eval(`expect(actualVal).${op}(resolvedValue)`); // eslint-disable-line no-eval
-  }
-
-  expectObject(res, expectedObj) {
-    if (expectedObj) {
-      for (const expectation of expectedObj) {
-        this.expectationOn(res, expectation);
+    if (isCheck) {
+      try {
+        eval(`expect(actualVal).${op}(resolvedValue)`); // eslint-disable-line no-eval
+        return true;
+      } catch (err) {
+        return false;
       }
+    } else {
+      eval(`expect(actualVal).${op}(resolvedValue)`); // eslint-disable-line no-eval
     }
 
     return true;
+  }
+
+  expectObject(res, expectedObj) {
+    let isTrue = true;
+    if (expectedObj) {
+      for (const expectation of expectedObj) {
+        console.log('expectation = ', JSON.stringify(expectation, null, 4));
+        const returnVal = this.expectationOn(res, expectation, true);
+
+        if (!returnVal) {
+          isTrue = false;
+        }
+      }
+    }
+
+    return isTrue;
   }
 }
 

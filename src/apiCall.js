@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const _ = require('lodash');
 const objectPath = require('object-path');
 const { expect } = require('chai');
@@ -106,38 +107,47 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
 
         const conditions = req.conditions || false;
         const utilConditions = _.get(conditions, 'util', false);
+        const interval = _.get(utilConditions, 'interval', 1000);
+        const limit = _.get(utilConditions, 'limit', 1);
+        const untilExpects = _.get(utilConditions, 'expect', []);
+        let res = {};
+        let isUntilConditionTrue = false;
 
         try {
           allReqData = evaluateFaker(allReqData, fakerScopes.test);
-          if (req.before && _.isFunction(req.before)) {
-            req.before.call(req, {
-              apiPort,
-              expect,
-              specs: config.apiCalls.swagger,
-              op: operations[req.call],
-              body: allReqData,
-              basicAuth,
-            });
-          }
-          let res;
+          callBefore(apiPort, config, operations, allReqData, basicAuth, req);
+
           if (utilConditions) {
-            const interval = _.get(utilConditions, 'interval', 1000);
-            const limit = _.get(utilConditions, 'limit', 1);
             tryer({
               action(done) {
-                res = SuperClient(
+                const scResponse = SuperClient(
                   apiPort,
                   req,
                   operations[req.call],
                   allReqData,
                   basicAuth,
-                );
+                )
                 done();
+                scResponse.then((response) => {
+                  // varDump('testRes = ', response, true);
+                  res = response;
+                  if (res.text && isJson(res.text)) {
+                    res.json = JSON.parse(res.text);
+                  }
+                  const jsonExpect = apiPort.expectObject(res.json, untilExpects.json)
+                  const headersExpect = apiPort.expectObject(res.header, untilExpects.headers)
+                  // varDump(jsonExpect);
+                  // varDump(headersExpect);
+                  if (jsonExpect && headersExpect) {
+                    isUntilConditionTrue = true;
+                  }
+                });
               },
-              until: () => apiPort.expectObject(res.header, req.expect.headers),
+              until: () => isUntilConditionTrue,
               interval,
               limit,
             });
+            successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
           } else {
             res = await SuperClient(
               apiPort,
@@ -146,112 +156,136 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
               allReqData,
               basicAuth,
             );
-          }
-
-          if (req.after && _.isFunction(req.after)) {
-            req.after.call(req, {
-              apiPort,
-              specs: config.apiCalls.swagger,
-              res,
-              expect,
-              op: operations[req.call],
-              body: allReqData,
-              error: {},
-              basicAuth,
-            });
-          }
-          if (isResPrint) {
-            varDump('Response= ', res, true);
-          }
-
-          if (req.expect) {
-            verifyExpectStructure(req.expect);
-            apiPort.expectStatus(req.expect.status, res.status);
-
-            if (req.expect.text) {
-              apiPort.expectationOn(res.text, req.expect.text);
-            }
-
             if (res.text && isJson(res.text)) {
               res.json = JSON.parse(res.text);
             }
-
-            if (req.expect.json) {
-              apiPort.expectObject(res.json, req.expect.json);
-            }
-
-            if (req.expect.headers) {
-              apiPort.expectObject(res.header, req.expect.headers);
-            }
-          }
-
-          for (const varName of Object.keys(save)) {
-            if (typeof save[varName] === 'object') {
-              const savedValue = evaluateResponseData(res, save[varName]);
-              apiPort.set(varName, savedValue);
-              if (isResPrint) {
-                console.log(`${varName} = `, JSON.stringify(savedValue));
-              }
-            } else if (save[varName].startsWith('$file.')) {
-              apiPort.set(varName, apiPort.resolve(save[varName]));
-              if (isResPrint) {
-                console.log(
-                  `${varName} = `,
-                  JSON.stringify(apiPort.resolve(save[varName])),
-                );
-              }
-            } else {
-              const value = getValueFromResponse(res, save[varName]);
-              apiPort.set(varName, value, false);
-              if (isResPrint) {
-                console.log(`${varName} = `, JSON.stringify(value));
-              }
-            }
+            successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
           }
         } catch (err) {
-          if (req.after && _.isFunction(req.after)) {
-            req.after.call(req, {
-              apiPort,
-              specs: config.apiCalls.swagger,
-              res: {},
-              expect,
-              op: operations[req.call],
-              body: allReqData,
-              error: err,
-              basicAuth,
-            });
-          }
-          if (isResPrint) {
-            varDump('Error= ', err, true);
-          }
-          for (const varName of Object.keys(save)) {
-            if (
-              typeof save[varName] !== 'object'
-              && (save[varName].startsWith('$file.')
-                || save[varName].startsWith('$config.'))
-            ) {
-              apiPort.set(varName, apiPort.resolve(save[varName]));
-              if (isResPrint) {
-                console.log(
-                  `${varName} = `,
-                  JSON.stringify(apiPort.resolve(save[varName])),
-                );
-              }
-            }
-          }
-          if ((req.expect || {}).status && err.status) {
-            apiPort.expectStatus(req.expect.status, err.status);
-          } else if ((req.expect || {}).error && err.error) {
-            apiPort.expectStatus(req.expect.error, err.error);
-          } else {
-            throw err;
-          }
+          callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
+          printRes(isResPrint, err, 'Error= ');
+          saveErrorResItem(apiPort, save, isResPrint);
+          assertExpectForError(apiPort, req, err);
         }
       });
     });
   });
   return config;
 };
+
+function successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint) {
+  callAfter(apiPort, config, operations, allReqData, basicAuth, req, res);
+  printRes(isResPrint, res);
+  assertExpect(apiPort, req, res);
+  saveResItem(apiPort, save, res, isResPrint);
+}
+
+function callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, isError = false, err = {}) {
+  if (req.after && _.isFunction(req.after)) {
+    req.after.call(req, {
+      apiPort,
+      specs: config.apiCalls.swagger,
+      res: isError ? {} : res,
+      expect,
+      op: operations[req.call],
+      body: allReqData,
+      error: isError ? err : {},
+      basicAuth,
+    });
+  }
+}
+
+function callBefore(apiPort, config, operations, allReqData, basicAuth, req) {
+  if (req.before && _.isFunction(req.before)) {
+    req.before.call(req, {
+      apiPort,
+      expect,
+      specs: config.apiCalls.swagger,
+      op: operations[req.call],
+      body: allReqData,
+      basicAuth,
+    });
+  }
+}
+
+function printRes(isResPrint, res, text = 'Response= ') {
+  if (isResPrint) {
+    varDump(text, res, true);
+  }
+}
+
+function assertExpect(apiPort, req, res) {
+  if (req.expect) {
+    verifyExpectStructure(req.expect);
+    apiPort.expectStatus(req.expect.status, res.status);
+
+    if (req.expect.text) {
+      apiPort.expectationOn(res.text, req.expect.text);
+    }
+
+    if (req.expect.json) {
+      apiPort.expectObject(res.json, req.expect.json);
+    }
+
+    if (req.expect.headers) {
+      apiPort.expectObject(res.header, req.expect.headers);
+    }
+  }
+}
+
+function assertExpectForError(apiPort, req, err) {
+  if ((req.expect || {}).status && err.status) {
+    apiPort.expectStatus(req.expect.status, err.status);
+  } else if ((req.expect || {}).error && err.error) {
+    apiPort.expectStatus(req.expect.error, err.error);
+  } else {
+    throw err;
+  }
+}
+
+function saveResItem(apiPort, save, res, isResPrint) {
+  for (const varName of Object.keys(save)) {
+    if (typeof save[varName] === 'object') {
+      const savedValue = evaluateResponseData(res, save[varName]);
+      apiPort.set(varName, savedValue);
+      if (isResPrint) {
+        console.log(`${varName} = `, JSON.stringify(savedValue));
+      }
+    } else if (save[varName].startsWith('$file.')) {
+      apiPort.set(varName, apiPort.resolve(save[varName]));
+      if (isResPrint) {
+        console.log(
+          `${varName} = `,
+          JSON.stringify(apiPort.resolve(save[varName])),
+        );
+      }
+    } else {
+      const value = getValueFromResponse(res, save[varName]);
+      apiPort.set(varName, value, false);
+      if (isResPrint) {
+        console.log(`${varName} = `, JSON.stringify(value));
+      }
+    }
+  }
+}
+
+function saveErrorResItem(apiPort, save, isResPrint) {
+  for (const varName of Object.keys(save)) {
+    if (
+      typeof save[varName] !== 'object'
+      && (save[varName].startsWith('$file.')
+        || save[varName].startsWith('$config.'))
+    ) {
+      apiPort.set(varName, apiPort.resolve(save[varName]));
+      if (isResPrint) {
+        console.log(
+          `${varName} = `,
+          JSON.stringify(apiPort.resolve(save[varName])),
+        );
+      }
+    }
+  }
+}
 
 function init(file) {
   const fileContent = loadYamlFile(file);
