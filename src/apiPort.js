@@ -350,7 +350,7 @@ class ApiPort {
     }
   }
 
-  expectationOn(responseObject, expectation, isCheck = false) {
+  expectationOn(responseObject, expectation) {
     const keys = Array.from(Object.keys(expectation));
     if (keys.length !== 1) {
       throw new Error(`Expectation can only have one key. Found: ${keys}`);
@@ -366,18 +366,12 @@ class ApiPort {
     // const op = objectPath(expect(actualVal), rest[remainingKeys[0]])
     // expect(op).to.be.a('function')
     // op(value)
-    if (isCheck) {
-      try {
-        eval(`expect(actualVal).${op}(resolvedValue)`); // eslint-disable-line no-eval
-        return true;
-      } catch (err) {
-        return false;
-      }
-    } else {
-      eval(`expect(actualVal).${op}(resolvedValue)`); // eslint-disable-line no-eval
-    }
 
-    return true;
+    console.log('actualVal=== ', actualVal);
+    console.log('op=== ', op);
+    console.log('resolvedValue=== ', resolvedValue);
+
+    eval(`expect(actualVal).${op}(resolvedValue)`); // eslint-disable-line no-eval
   }
 
   expectObject(res, expectedObj) {
@@ -385,9 +379,9 @@ class ApiPort {
     if (expectedObj) {
       for (const expectation of expectedObj) {
         console.log('expectation = ', JSON.stringify(expectation, null, 4));
-        const returnVal = this.expectationOn(res, expectation, true);
-
-        if (!returnVal) {
+        try {
+          this.expectationOn(res, expectation, true);
+        } catch (err) {
           isTrue = false;
         }
       }
