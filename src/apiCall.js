@@ -126,20 +126,25 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
                   operations[req.call],
                   allReqData,
                   basicAuth,
+                  true,
                 )
                 done();
                 scResponse.then((response) => {
-                  // varDump('testRes = ', response, true);
+                  varDump('testRes = ', response, true);
                   res = response;
-                  if (res.text && isJson(res.text)) {
-                    res.json = JSON.parse(res.text);
+                  res = addJsonToRes(res);
+
+                  const isJsonExpectMeet = apiPort.expectObject(res.json, untilExpects.json)
+                  const headersExpect = _.get(untilExpects, 'headers', false);
+                  let isHeadersExpectMeet = true;
+                  if (headersExpect) {
+                    isHeadersExpectMeet = apiPort.expectObject(res.header, headersExpect)
                   }
-                  const jsonExpect = apiPort.expectObject(res.json, untilExpects.json)
-                  const headersExpect = apiPort.expectObject(res.header, untilExpects.headers)
-                  // varDump(jsonExpect);
-                  // varDump(headersExpect);
-                  if (jsonExpect && headersExpect) {
+                  varDump('', isJsonExpectMeet, false);
+                  // varDump(isHeadersExpectMeet);
+                  if (isJsonExpectMeet && isHeadersExpectMeet) {
                     isUntilConditionTrue = true;
+                    successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
                   }
                 });
               },
@@ -147,7 +152,7 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
               interval,
               limit,
             });
-            successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
+            // successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
           } else {
             res = await SuperClient(
               apiPort,
@@ -156,9 +161,7 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
               allReqData,
               basicAuth,
             );
-            if (res.text && isJson(res.text)) {
-              res.json = JSON.parse(res.text);
-            }
+            res = addJsonToRes(res);
             successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
           }
         } catch (err) {
@@ -174,10 +177,19 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
 };
 
 function successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint) {
+  varDump('sucess res calling....', '', false);
   callAfter(apiPort, config, operations, allReqData, basicAuth, req, res);
   printRes(isResPrint, res);
   assertExpect(apiPort, req, res);
   saveResItem(apiPort, save, res, isResPrint);
+}
+
+function addJsonToRes(res) {
+  if (res.text && isJson(res.text)) {
+    res.json = JSON.parse(res.text);
+  }
+
+  return res;
 }
 
 function callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, isError = false, err = {}) {
@@ -267,6 +279,8 @@ function saveResItem(apiPort, save, res, isResPrint) {
       }
     }
   }
+
+  return apiPort;
 }
 
 function saveErrorResItem(apiPort, save, isResPrint) {
@@ -285,6 +299,8 @@ function saveErrorResItem(apiPort, save, isResPrint) {
       }
     }
   }
+
+  return apiPort;
 }
 
 function init(file) {
@@ -294,18 +310,6 @@ function init(file) {
   fileContent.apiCalls.swagger = fileContent.apiCalls.swagger || [];
 
   return fileContent;
-}
-
-async function getResponse(apiPort, req, operations, allReqData, basicAuth) {
-  const res = await SuperClient(
-    apiPort,
-    req,
-    operations[req.call],
-    allReqData,
-    basicAuth,
-  );
-
-  return res;
 }
 
 function evaluateResponseData(res, save) {
@@ -361,8 +365,8 @@ function getValueFromResponse(res, key) {
   return objectPath.get(res, key);
 }
 
-function varDump(name, obj, isStr) {
-  if (isStr) {
+function varDump(name, obj, printAsString = false) {
+  if (printAsString) {
     console.log(name, JSON.stringify(obj, null, 2));
   } else {
     console.log(name, obj);
