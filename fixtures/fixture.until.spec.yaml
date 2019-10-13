@@ -1,0 +1,30 @@
+apiCalls:
+    swagger:
+      - name: Login unit condition check - success
+        call: post_users_login
+        header:
+          Content-Type: application/json
+        data:
+          email: !faker "internet.email"
+          password: !faker ["internet.password", "file"]
+        conditions:
+          util: 
+            expect:
+              json:
+                - user.status: to.be.eql ENABLED
+            interval: 500
+            limit: 5
+        expect:
+          status: 200
+        save:
+          userResponse: json
+
+
+tests:
+  - name: Checking login response
+    expects:
+      - userResponse.message: to.be User logged Successfully
+
+  - name: User information exist
+    expects:
+      - userResponse: to.have.key user

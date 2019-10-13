@@ -367,27 +367,35 @@ class ApiPort {
     // expect(op).to.be.a('function')
     // op(value)
 
-    console.log('actualVal=== ', actualVal);
-    console.log('op=== ', op);
-    console.log('resolvedValue=== ', resolvedValue);
-
     eval(`expect(actualVal).${op}(resolvedValue)`); // eslint-disable-line no-eval
   }
 
-  expectObject(res, expectedObj) {
+  expectObject(res, expectedObj, isExpectedStatus = false) {
     let isTrue = true;
     if (expectedObj) {
       for (const expectation of expectedObj) {
-        console.log('expectation = ', JSON.stringify(expectation, null, 4));
-        try {
+        if (isExpectedStatus) {
+          const returnFlag = this.returnExpectation(res, expectation);
+          if (!returnFlag) {
+            isTrue = returnFlag
+          }
+        } else {
           this.expectationOn(res, expectation, true);
-        } catch (err) {
-          isTrue = false;
         }
       }
     }
 
     return isTrue;
+  }
+
+  returnExpectation(res, expectation) {
+    try {
+      this.expectationOn(res, expectation, true);
+    } catch (err) {
+      return false;
+    }
+
+    return true;
   }
 }
 

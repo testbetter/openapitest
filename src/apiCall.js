@@ -120,7 +120,6 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
           if (utilConditions) {
             tryer({
               action(done) {
-                console.log(`--------------------------------------------------------calling action`);
                 const scResponse = SuperClient(
                   apiPort,
                   req,
@@ -130,35 +129,34 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
                   true,
                 )
                 scResponse.then((response) => {
-                  varDump('testRes = ', response, true);
                   res = response;
                   res = addJsonToRes(res);
 
-                  const isJsonExpectMeet = apiPort.expectObject(res.json, untilExpects.json)
+                  const isJsonExpectMeet = apiPort.expectObject(res.json, untilExpects.json, true)
                   const headersExpect = _.get(untilExpects, 'headers', false);
                   let isHeadersExpectMeet = true;
                   if (headersExpect) {
-                    isHeadersExpectMeet = apiPort.expectObject(res.header, headersExpect)
+                    isHeadersExpectMeet = apiPort.expectObject(res.header, headersExpect, true)
                   }
-                  varDump('', isJsonExpectMeet, false);
-                  // varDump(isHeadersExpectMeet);
                   if (isJsonExpectMeet && isHeadersExpectMeet) {
                     isUntilConditionTrue = true;
-                    successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
                   }
                   done();
-                }).catch(() => { done();  });
+                }).catch(() => { done() });
               },
               pass: () => {
-                console.log('--------------------------------------------------------------------pass');
-                successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
+                try {
+                  successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
+                } catch (err) {
+                  // TODO: need to handle UnhandledPromiseRejectionWarning
+                  varDump('error============== ', err, true);
+                }
                 testDone()
               },
               until: () => isUntilConditionTrue,
               interval,
               limit,
             });
-            // successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
           } else {
             SuperClient(
               apiPort,
@@ -194,7 +192,6 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
 };
 
 function successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint) {
-  varDump('sucess res calling....', '', false);
   callAfter(apiPort, config, operations, allReqData, basicAuth, req, res);
   printRes(isResPrint, res);
   assertExpect(apiPort, req, res);
