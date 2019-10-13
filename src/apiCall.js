@@ -67,7 +67,7 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
     requests.forEach((_req) => {
       const itMethod = getItFunction(_req, itApi);
 
-      itMethod(_req.itText, async function itFn() {
+      itMethod(_req.itText, function itFn(testDone) {
         const req = evaluateFaker(_req, fakerScopes.test);
         this.timeout(apiPort.get('TIMEOUT'));
 
@@ -120,6 +120,7 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
           if (utilConditions) {
             tryer({
               action(done) {
+                console.log(`--------------------------------------------------------calling action`);
                 const scResponse = SuperClient(
                   apiPort,
                   req,
@@ -128,7 +129,6 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
                   basicAuth,
                   true,
                 )
-                done();
                 scResponse.then((response) => {
                   varDump('testRes = ', response, true);
                   res = response;
@@ -146,7 +146,13 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
                     isUntilConditionTrue = true;
                     successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
                   }
-                });
+                  done();
+                }).catch(() => { done();  });
+              },
+              pass: () => {
+                console.log('--------------------------------------------------------------------pass');
+                successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
+                testDone()
               },
               until: () => isUntilConditionTrue,
               interval,
@@ -154,21 +160,32 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
             });
             // successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
           } else {
-            res = await SuperClient(
+            SuperClient(
               apiPort,
               req,
               operations[req.call],
               allReqData,
               basicAuth,
-            );
-            res = addJsonToRes(res);
-            successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
+            ).then((response) => {
+              res = response;
+              res = addJsonToRes(res);
+              successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
+              testDone();
+            }).catch((err) => {
+              callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
+              printRes(isResPrint, err, 'Error= ');
+              saveErrorResItem(apiPort, save, isResPrint);
+              assertExpectForError(apiPort, req, err);
+              testDone();
+            });
           }
         } catch (err) {
+          console.log(err);
           callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
           printRes(isResPrint, err, 'Error= ');
           saveErrorResItem(apiPort, save, isResPrint);
           assertExpectForError(apiPort, req, err);
+          testDone();
         }
       });
     });
