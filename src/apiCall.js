@@ -147,11 +147,10 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
               pass: () => {
                 try {
                   successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
+                  testDone();
                 } catch (err) {
-                  // TODO: need to handle UnhandledPromiseRejectionWarning
-                  varDump('error============== ', err, true);
+                  testDone(err);
                 }
-                testDone()
               },
               until: () => isUntilConditionTrue,
               interval,
@@ -167,23 +166,34 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
             ).then((response) => {
               res = response;
               res = addJsonToRes(res);
-              successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
-              testDone();
+              try {
+                successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
+                testDone();
+              } catch (err) {
+                testDone(err);
+              }
             }).catch((err) => {
-              callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
-              printRes(isResPrint, err, 'Error= ');
-              saveErrorResItem(apiPort, save, isResPrint);
-              assertExpectForError(apiPort, req, err);
-              testDone();
+              try {
+                callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
+                printRes(isResPrint, err, 'Error= ');
+                saveErrorResItem(apiPort, save, isResPrint);
+                assertExpectForError(apiPort, req, err);
+                testDone();
+              } catch (error) {
+                testDone(error);
+              }
             });
           }
         } catch (err) {
-          console.log(err);
-          callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
-          printRes(isResPrint, err, 'Error= ');
-          saveErrorResItem(apiPort, save, isResPrint);
-          assertExpectForError(apiPort, req, err);
-          testDone();
+          try {
+            callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
+            printRes(isResPrint, err, 'Error= ');
+            saveErrorResItem(apiPort, save, isResPrint);
+            assertExpectForError(apiPort, req, err);
+            testDone();
+          } catch (error) {
+            testDone(error);
+          }
         }
       });
     });
