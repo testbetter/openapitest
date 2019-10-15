@@ -174,10 +174,7 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
               }
             }).catch((err) => {
               try {
-                callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
-                printRes(isResPrint, err, 'Error= ');
-                saveErrorResItem(apiPort, save, isResPrint);
-                assertExpectForError(apiPort, req, err);
+                errorRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, err, isResPrint);
                 testDone();
               } catch (error) {
                 testDone(error);
@@ -186,10 +183,7 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
           }
         } catch (err) {
           try {
-            callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
-            printRes(isResPrint, err, 'Error= ');
-            saveErrorResItem(apiPort, save, isResPrint);
-            assertExpectForError(apiPort, req, err);
+            errorRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, err, isResPrint);
             testDone();
           } catch (error) {
             testDone(error);
@@ -206,6 +200,13 @@ function successRes(apiPort, config, operations, allReqData, basicAuth, save, re
   printRes(isResPrint, res);
   assertExpect(apiPort, req, res);
   saveResItem(apiPort, save, res, isResPrint);
+}
+
+function errorRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, err, isResPrint) {
+  callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
+  printRes(isResPrint, err, 'Error= ');
+  saveErrorResItem(apiPort, save, isResPrint);
+  assertExpectForError(apiPort, req, err);
 }
 
 function addJsonToRes(res) {
