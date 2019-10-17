@@ -1,330 +1,402 @@
-const _ = require('lodash')
-const objectPath = require('object-path')
-const expect = require('expect.js')
-const fs = require('fs')
-const path = require('path')
-const klawSync = require('klaw-sync')
-const { loadFile, YamlParsingError } = require('./util.js')
+/* eslint-disable no-param-reassign */
+const _ = require('lodash');
+const objectPath = require('object-path');
+const expect = require('expect.js');
+const fs = require('fs');
+const path = require('path');
+const klawSync = require('klaw-sync');
+const { loadFile, YamlParsingError } = require('./util.js');
 
-const currentDir = process.cwd()
-
+const currentDir = process.cwd();
 
 function getLocalDir(dir, required = true) {
-  const localDir = path.join(currentDir, dir)
+  const localDir = path.join(currentDir, dir);
   if (!fs.existsSync(localDir)) {
     if (required) {
-      throw new Error(`local directory ${dir} is required for integration testing.`)
+      throw new Error(
+        `local directory ${dir} is required for integration testing.`,
+      );
     }
-    return undefined
+    return undefined;
   }
-  return localDir
+  return localDir;
 }
 
 function parseOpValue(expectationValue) {
-  if (typeof expectationValue !== 'string' || !expectationValue.startsWith('to.')) {
+  if (
+    typeof expectationValue !== 'string'
+    || !expectationValue.startsWith('to.')
+  ) {
     return {
       op: 'to.be.equal',
       value: expectationValue,
-    }
+    };
   }
 
   // split the string on spaces
-  const parts = expectationValue.split(' ')
+  const parts = expectationValue.split(' ');
   const ret = {
     op: parts[0],
-  }
+  };
 
   if (parts.length > 1) {
-    ret.value = expectationValue.substring(ret.op.length).trim()
+    ret.value = expectationValue.substring(ret.op.length).trim();
   }
 
-  return ret
+  return ret;
 }
 
 function getAbsolutePath(envPath) {
-  const cd = process.env.CD
-  return path.isAbsolute(envPath) ? envPath : path.join(cd, envPath)
+  const cd = process.env.CD;
+  return path.isAbsolute(envPath) ? envPath : path.join(cd, envPath);
 }
 
 class ApiPort {
   constructor() {
-    this.apiPort = {}
-    this.currentFile = ''
-    this.globalDataConfig = []
-    this.commonConfig = []
+    this.apiPort = {};
+    this.currentFile = '';
+    this.globalDataConfig = [];
+    this.commonConfig = [];
   }
 
   init() {
-    this.set('TIMEOUT', process.env.TIMEOUT || 60000)
+    this.set('TIMEOUT', process.env.TIMEOUT || 60000);
 
-    this.set('API_SERVER_URL', process.env.API_SERVER_URL)
+    this.set('API_SERVER_URL', process.env.API_SERVER_URL);
 
-    this.set('API_TESTS_PATH', process.env.API_TESTS_PATH || getLocalDir('integration/test-spec'))
-    this.set('GLOBAL_DATA_CONFIG', process.env.GLOBAL_DATA_CONFIG, false)
-    this.set('COMMON_DATA_CONFIG', process.env.COMMON_DATA_CONFIG, false)
+    this.set(
+      'API_TESTS_PATH',
+      process.env.API_TESTS_PATH || getLocalDir('integration/test-spec'),
+    );
+    this.set('GLOBAL_DATA_CONFIG', process.env.GLOBAL_DATA_CONFIG, false);
+    this.set('COMMON_DATA_CONFIG', process.env.COMMON_DATA_CONFIG, false);
 
     if (process.env.GLOBAL_DATA_CONFIG) {
-      const globalDataConfigFolderPath = getAbsolutePath(process.env.GLOBAL_DATA_CONFIG)
-      const globalDataConfigFolderPaths = klawSync(globalDataConfigFolderPath, { nodir: true })
+      const globalDataConfigFolderPath = getAbsolutePath(
+        process.env.GLOBAL_DATA_CONFIG,
+      );
+      const globalDataConfigFolderPaths = klawSync(globalDataConfigFolderPath, {
+        nodir: true,
+      });
       globalDataConfigFolderPaths.forEach((file) => {
-        const filePath = file.path
+        const filePath = file.path;
         let fileName = path.basename(filePath, path.extname(filePath));
-        fileName = fileName.replace('.config', '')
-        const fileData = loadFile(filePath, true)
+        fileName = fileName.replace('.config', '');
+        const fileData = loadFile(filePath, true);
         if (fileData) {
-          this.globalDataConfig[fileName] = fileData
+          this.globalDataConfig[fileName] = fileData;
         }
-      })
+      });
     }
 
     if (process.env.COMMON_DATA_CONFIG) {
-      const dataConfigFolderPath = getAbsolutePath(process.env.COMMON_DATA_CONFIG)
-      const dataConfigFolderPaths = klawSync(dataConfigFolderPath, { nodir: true })
+      const dataConfigFolderPath = getAbsolutePath(
+        process.env.COMMON_DATA_CONFIG,
+      );
+      const dataConfigFolderPaths = klawSync(dataConfigFolderPath, {
+        nodir: true,
+      });
       dataConfigFolderPaths.forEach((file) => {
-        const filePath = file.path
+        const filePath = file.path;
         let fileName = path.basename(filePath, path.extname(filePath));
-        fileName = fileName.replace('.config', '')
-        const fileData = loadFile(filePath, true)
+        fileName = fileName.replace('.config', '');
+        const fileData = loadFile(filePath, true);
         if (fileData) {
-          this.commonConfig[fileName] = fileData
+          this.commonConfig[fileName] = fileData;
         }
-      })
+      });
     }
 
-    let openApiPath = ''
+    let openApiPath = '';
     if (process.env.OPENAPI_PATH) {
-      openApiPath = getAbsolutePath(process.env.OPENAPI_PATH)
+      openApiPath = getAbsolutePath(process.env.OPENAPI_PATH);
     }
-    this.set('OPENAPI_PATH', openApiPath || getLocalDir('integration/api-docs.json'))
+    this.set(
+      'OPENAPI_PATH',
+      openApiPath || getLocalDir('integration/api-docs.json'),
+    );
 
-    let testDataPath = ''
+    let testDataPath = '';
     if (process.env.TEST_DATA_PATH) {
-      testDataPath = getAbsolutePath(process.env.TEST_DATA_PATH)
+      testDataPath = getAbsolutePath(process.env.TEST_DATA_PATH);
     }
-    this.set('TEST_DATA_PATH', testDataPath || getLocalDir('integration/data', false), false)
+    this.set(
+      'TEST_DATA_PATH',
+      testDataPath || getLocalDir('integration/data', false),
+      false,
+    );
 
-    let sharedDataPath = ''
+    let sharedDataPath = '';
     if (process.env.SHARED_TEST_DATA) {
-      sharedDataPath = getAbsolutePath(process.env.SHARED_TEST_DATA)
+      sharedDataPath = getAbsolutePath(process.env.SHARED_TEST_DATA);
     }
-    this.set('SHARED_TEST_DATA', sharedDataPath, false)
+    this.set('SHARED_TEST_DATA', sharedDataPath, false);
 
-    const apis = require(this.get('OPENAPI_PATH')) // eslint-disable-line import/no-dynamic-require, global-require
+    const apis = require(this.get('OPENAPI_PATH')); // eslint-disable-line import/no-dynamic-require, global-require
 
-    const operations = {}
+    const operations = {};
 
-    apis.servers[0] = { url: this.get('API_SERVER_URL') }
+    apis.servers[0] = { url: this.get('API_SERVER_URL') };
 
     for (const apiPath of Object.keys(apis.paths)) {
-      const params = apis.paths[apiPath].parameters || []
+      const params = apis.paths[apiPath].parameters || [];
       for (const action of Object.keys(apis.paths[apiPath])) {
-        const actionObj = apis.paths[apiPath][action]
-        const { operationId } = actionObj
+        const actionObj = apis.paths[apiPath][action];
+        const { operationId } = actionObj;
         if (operationId) {
-          const operation = apis.paths[apiPath][action]
-          operation.path = apiPath
-          operation.method = action
+          const operation = apis.paths[apiPath][action];
+          operation.path = apiPath;
+          operation.method = action;
           operation.parameters = _.unionBy(
             actionObj.parameters,
             params,
             'name',
-          )
-          operations[actionObj.operationId] = operation
+          );
+          operations[actionObj.operationId] = operation;
         }
       }
     }
 
-    this.set('OPENAPI_SPEC', apis)
-    this.set('OPENAPI_OPERATIONS', operations)
+    this.set('OPENAPI_SPEC', apis);
+    this.set('OPENAPI_OPERATIONS', operations);
   }
-
 
   reset() {
     for (const key in this.apiPort) {
       if (key.match(/^[^A-Z]/)) {
-        delete this.apiPort[key]
+        delete this.apiPort[key];
       }
     }
   }
 
   start() {
-    this.keys = []
+    this.keys = [];
   }
 
   remove() {
-    this.keys.forEach(key => delete this.apiPort[key])
+    this.keys.forEach(key => delete this.apiPort[key]);
   }
 
   set(key, value, required = true) {
     if (required && value === undefined) {
-      throw new Error(`Value required for: ${key}`)
+      throw new Error(`Value required for: ${key}`);
     }
-    this.apiPort[key] = value
-    return this
+    this.apiPort[key] = value;
+    return this;
   }
 
   get(key, defaultValue = null) {
-    return typeof this.apiPort[key] === 'undefined' ? defaultValue : this.apiPort[key]
+    return typeof this.apiPort[key] === 'undefined'
+      ? defaultValue
+      : this.apiPort[key];
   }
 
   exists(value) {
-    const c = `${value}`
-    const matches = c.match(/\${[^}]+}/g)
-    let exists = true
+    const c = `${value}`;
+    const matches = c.match(/\${[^}]+}/g);
+    let exists = true;
 
     if (matches) {
       matches.forEach((match) => {
-        const repl = objectPath.get(this.apiPort, match.substring(2, match.length - 1))
+        const repl = objectPath.get(
+          this.apiPort,
+          match.substring(2, match.length - 1),
+        );
 
         if (typeof repl === 'undefined') {
-          exists = false
-          return false
+          exists = false;
+          return false;
         }
 
-        return null
-      })
+        return null;
+      });
     }
 
-    return exists
+    return exists;
   }
 
   resolve(value) {
-    let valueStr = `${value}`
+    let valueStr = `${value}`;
     if (valueStr.startsWith('$file.')) {
-      return this.getDataFromFile(valueStr.substring('$file.'.length))
+      return this.getDataFromFile(valueStr.substring('$file.'.length));
     }
     if (valueStr.startsWith('$config.')) {
-      const fileAndKeyName = valueStr.substring('$config.'.length)
-      const parts = fileAndKeyName.split('.')
-      const fileName = parts.length > 0 ? parts[0] : ''
-      const keyName = parts.length > 0 ? parts[1] : ''
-      let returnValue = _.get(this.commonConfig, [fileName, keyName], '')
+      const fileAndKeyName = valueStr.substring('$config.'.length);
+      const parts = fileAndKeyName.split('.');
+      const fileName = parts.length > 0 ? parts[0] : '';
+      const keyName = parts.length > 0 ? parts[1] : '';
+      let returnValue = _.get(this.commonConfig, [fileName, keyName], '');
       if (!returnValue) {
-        returnValue = _.get(this.globalDataConfig, [fileName, keyName], '')
+        returnValue = _.get(this.globalDataConfig, [fileName, keyName], '');
       }
-      return returnValue
+      return returnValue;
     }
 
-    const matches = valueStr.match(/\${[^.][^}]+}/g)
+    const matches = valueStr.match(/\${[^.][^}]+}/g);
 
     if (!matches) {
-      return value
+      return value;
     }
 
     for (const match of matches) {
-      const tokenVar = match.substring(2, match.length - 1)
-      const replaceStr = objectPath.get(this.apiPort, tokenVar)
+      const tokenVar = match.substring(2, match.length - 1);
+      const replaceStr = objectPath.get(this.apiPort, tokenVar);
       if (!replaceStr) {
-        throw new Error(`${tokenVar} not found.`)
+        throw new Error(`${tokenVar} not found.`);
       }
       if (typeof replaceStr === 'object') {
         if (valueStr !== match) {
-          throw new Error(`Cannot set object in string: ${value}`)
+          throw new Error(`Cannot set object in string: ${value}`);
         }
-        return replaceStr
+        return replaceStr;
       }
-      if (valueStr === match && (typeof replaceStr === 'number' || typeof replaceStr === 'boolean')) {
-        return replaceStr
+      if (
+        valueStr === match
+        && (typeof replaceStr === 'number' || typeof replaceStr === 'boolean')
+      ) {
+        return replaceStr;
       }
-      valueStr = valueStr.replace(match, replaceStr)
+      valueStr = valueStr.replace(match, replaceStr);
     }
 
-    return valueStr
+    return valueStr;
   }
 
   resolveObject(obj = {}) {
     return Object.keys(obj).reduce((actual, key) => {
       const value = obj[key];
-      const resolvedValue = _.isObject(value) ? this.resolveObject(value) : this.resolve(value)
-      _.set(actual, key, resolvedValue)
+      const resolvedValue = _.isObject(value)
+        ? this.resolveObject(value)
+        : this.resolve(value);
+      _.set(actual, key, resolvedValue);
       return actual;
-    }, obj)
+    }, obj);
   }
 
   getDataFromFile(fileAndKeyName, file = '') {
-    this.apiPort.$file = this.apiPort.$file || {}
+    this.apiPort.$file = this.apiPort.$file || {};
 
-    const fileDir = path.parse(file).dir
-    const parts = fileAndKeyName.split('.')
-    const fileName = parts[0]
-    const objPath = _.join(parts.slice(1), '.')
-    const fileDataDir = path.join(fileDir, 'data')
+    const fileDir = path.parse(file).dir;
+    const parts = fileAndKeyName.split('.');
+    const fileName = parts[0];
+    const objPath = _.join(parts.slice(1), '.');
+    const fileDataDir = path.join(fileDir, 'data');
 
     if (!this.apiPort.$file[fileName]) {
-      const lookIn = [this.get('TEST_DATA_PATH'), fileDir, fileDataDir, this.get('SHARED_TEST_DATA')]
+      const lookIn = [
+        this.get('TEST_DATA_PATH'),
+        fileDir,
+        fileDataDir,
+        this.get('SHARED_TEST_DATA'),
+      ];
 
       for (const testDataPath of lookIn) {
         if (testDataPath) {
-          const filePath = `${testDataPath}/${fileName}.data`
+          const filePath = `${testDataPath}/${fileName}.data`;
           try {
-            const fileData = loadFile(filePath)
+            const fileData = loadFile(filePath);
             if (fileData) {
-              this.apiPort.$file[fileName] = fileData
-              break
+              this.apiPort.$file[fileName] = fileData;
+              break;
             }
           } catch (e) {
-            delete this.apiPort.$file[fileName]
+            delete this.apiPort.$file[fileName];
             // Ignored here if not found will re-throw the error in the end of this loop
             if (e instanceof YamlParsingError) {
-              throw e
+              throw e;
             }
           }
         }
       }
 
       if (!this.apiPort.$file[fileName]) {
-        throw new Error(`Cannot find test data file: ${fileName}.data.(js|yaml) in any of: ${lookIn}`)
+        throw new Error(
+          `Cannot find test data file: ${fileName}.data.(js|yaml) in any of: ${lookIn}`,
+        );
       }
     }
 
     return objPath.length > 0
       ? objectPath.get(this.apiPort.$file[fileName], objPath)
-      : this.apiPort.$file[fileName]
+      : this.apiPort.$file[fileName];
   }
 
   validateParams(allParams, reqParams) {
     for (const key of Object.keys(reqParams)) {
       if (_.findIndex(allParams, { name: key, in: 'path' }) === -1) {
-        throw new Error(`Parameter '${key}' does not exist`)
+        throw new Error(`Parameter '${key}' does not exist`);
       } else {
-        allParams = _.differenceBy(allParams, [{ name: key, in: 'path' }], 'name') // eslint-disable-line
+        allParams = _.differenceBy(
+          allParams,
+          [{ name: key, in: 'path' }],
+          'name',
+        ); // eslint-disable-line
       }
     }
 
-    const foundIndex = _.findIndex(allParams, { in: 'path', required: true })
+    const foundIndex = _.findIndex(allParams, { in: 'path', required: true });
     if (allParams && foundIndex !== -1) {
-      throw new Error(`Parameter '${allParams.foundIndex.name}' is required`)
+      throw new Error(`Parameter '${allParams.foundIndex.name}' is required`);
     }
   }
 
   expectStatus(expectedStatus, actualStatus) {
     if (expectedStatus) {
       if (Array.isArray(expectedStatus)) {
-        expect(this.resolve(expectedStatus)).to.contain(actualStatus)
+        expect(this.resolve(expectedStatus)).to.contain(actualStatus);
       } else {
-        expect(actualStatus).to.be.equal(this.resolve(expectedStatus))
+        expect(actualStatus).to.be.equal(this.resolve(expectedStatus));
       }
     }
   }
 
   expectationOn(responseObject, expectation) {
-    const keys = Array.from(Object.keys(expectation))
+    const keys = Array.from(Object.keys(expectation));
     if (keys.length !== 1) {
-      throw new Error(`Expectation can only have one key. Found: ${keys}`)
+      throw new Error(`Expectation can only have one key. Found: ${keys}`);
     }
 
-    const objPath = keys[0]
-    const { op, value } = parseOpValue(expectation[keys[0]])
+    const objPath = keys[0];
+    const { op, value } = parseOpValue(expectation[keys[0]]);
 
-    const actualVal = objectPath.get(responseObject, objPath) // eslint-disable-line no-unused-vars
-    const resolvedValue = this.resolve(value) // eslint-disable-line no-unused-vars
+    const actualVal = objectPath.get(responseObject, objPath); // eslint-disable-line no-unused-vars
+    const resolvedValue = this.resolve(value); // eslint-disable-line no-unused-vars
 
     // TODO this would be nicer than eval, but not sure it can work
     // const op = objectPath(expect(actualVal), rest[remainingKeys[0]])
     // expect(op).to.be.a('function')
     // op(value)
-    eval(`expect(actualVal).${op}(resolvedValue)`) // eslint-disable-line no-eval
+
+    eval(`expect(actualVal).${op}(resolvedValue)`); // eslint-disable-line no-eval
+  }
+
+  expectObject(res, expectedObj, isExpectedStatus = false) {
+    let isTrue = true;
+    if (expectedObj) {
+      for (const expectation of expectedObj) {
+        if (isExpectedStatus) {
+          const returnFlag = this.returnExpectation(res, expectation);
+          if (!returnFlag) {
+            isTrue = returnFlag
+          }
+        } else {
+          this.expectationOn(res, expectation, true);
+        }
+      }
+    }
+
+    return isTrue;
+  }
+
+  returnExpectation(res, expectation) {
+    try {
+      this.expectationOn(res, expectation, true);
+    } catch (err) {
+      return false;
+    }
+
+    return true;
   }
 }
 
-module.exports = ApiPort
+module.exports = ApiPort;

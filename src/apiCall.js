@@ -1,38 +1,40 @@
-const _ = require('lodash')
-const objectPath = require('object-path')
-const { expect } = require('chai')
+/* eslint-disable max-len */
+const _ = require('lodash');
+const objectPath = require('object-path');
+const { expect } = require('chai');
 
-const { loadYamlFile } = require('./util.js')
-const { evaluateFaker, fakerScopes } = require('./customTypes/faker.js')
-const SuperClient = require('./superClient')
+const tryer = require('tryer');
+const { loadYamlFile } = require('./util.js');
+const { evaluateFaker, fakerScopes } = require('./customTypes/faker.js');
+const SuperClient = require('./superClient');
 
-const processedExpectations = ['status', 'json', 'headers', 'error']
+const processedExpectations = ['status', 'json', 'headers', 'error'];
 
 function getItFunction(req, itApi = it) {
-  const useOnly = req.only
-  const useSkip = req.skip
-  let itMethod = itApi
+  const useOnly = req.only;
+  const useSkip = req.skip;
+  let itMethod = itApi;
   if (useOnly) {
-    itMethod = itApi.only
+    itMethod = itApi.only;
   }
 
   if (useSkip) {
-    itMethod = itApi.skip
+    itMethod = itApi.skip;
   }
-  return itMethod
+  return itMethod;
 }
 
 function getItName(req) {
-  return req.name || req.call
+  return req.name || req.call;
 }
 
 module.exports = function apiCall(file, apiPort, itApi = it) {
-  const config = init(file)
-  const openSpec = apiPort.get('OPENAPI_SPEC')
-  const operations = apiPort.get('OPENAPI_OPERATIONS')
+  const config = init(file);
+  const openSpec = apiPort.get('OPENAPI_SPEC');
+  const operations = apiPort.get('OPENAPI_OPERATIONS');
 
-  const { paths, ...remainingSpec } = openSpec
-  const operationIds = {}
+  const { paths, ...remainingSpec } = openSpec;
+  const operationIds = {};
 
   _.forEach(paths, (actions, route) => {
     _.forEach(actions, (details, action) => {
@@ -42,233 +44,357 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
             [action]: details,
           },
         },
-      })
-    })
-  })
+      });
+    });
+  });
 
-  const fileEvaluator = _.ary(_.partialRight(evaluateFaker, fakerScopes.file), 1);
+  const fileEvaluator = _.ary(
+    _.partialRight(evaluateFaker, fakerScopes.file),
+    1,
+  );
 
-  const swaggerParserd = config.apiCalls.swagger
-    .map(fileEvaluator)
+  const swaggerParsed = config.apiCalls.swagger.map(fileEvaluator);
 
-  swaggerParserd.forEach((reqParams) => {
-    const repeat = reqParams.repeat || 1
-    const requests = _.times(repeat)
-      .map(() => _.clone(reqParams))
+  swaggerParsed.forEach((reqParams) => {
+    const repeat = reqParams.repeat || 1;
+    const requests = _.times(repeat).map(() => _.clone(reqParams));
 
     requests.forEach((req, i) => {
-      const name = getItName(req)
-      req.itText = repeat === 1 ? name : `${name} - ${i + 1}`
-    })
+      const name = getItName(req);
+      req.itText = repeat === 1 ? name : `${name} - ${i + 1}`;
+    });
 
     requests.forEach((_req) => {
       const itMethod = getItFunction(_req, itApi);
 
-      itMethod(_req.itText, async function itFn() {
-        const req = evaluateFaker(_req, fakerScopes.test)
-        this.timeout(apiPort.get('TIMEOUT'))
+      itMethod(_req.itText, function itFn(testDone) {
+        const req = evaluateFaker(_req, fakerScopes.test);
+        this.timeout(apiPort.get('TIMEOUT'));
 
         if (!operationIds[req.call]) {
-          throw new Error(`No swagger operation exists with operationId "${req.call}"`)
+          throw new Error(
+            `No swagger operation exists with operationId "${req.call}"`,
+          );
         }
 
-        const params = req.parameters || ''
+        const params = req.parameters || '';
         if (params) {
-          apiPort.validateParams(operations[req.call].parameters || [], params)
+          apiPort.validateParams(operations[req.call].parameters || [], params);
         }
 
-        let allReqData = {}
-        const reqData = req.data || {}
-        let basicAuth = req.basicAuth || {}
+        let allReqData = {};
+        const reqData = req.data || {};
+        let basicAuth = req.basicAuth || {};
         if (basicAuth.$file) {
-          basicAuth = apiPort.getDataFromFile(basicAuth.$file, file)
-          basicAuth = apiPort.resolveObject(basicAuth)
-          delete basicAuth.$file
+          basicAuth = apiPort.getDataFromFile(basicAuth.$file, file);
+          basicAuth = apiPort.resolveObject(basicAuth);
+          delete basicAuth.$file;
         }
 
-        req.header = apiPort.resolveObject(req.header)
-        apiPort.resolveObject(req.query)
+        req.header = apiPort.resolveObject(req.header);
+        apiPort.resolveObject(req.query);
 
         if (reqData.$file) {
-          const reqDataFile = apiPort.getDataFromFile(reqData.$file, file)
-          allReqData = apiPort.resolveObject(reqDataFile)
-          delete reqData.$file
+          const reqDataFile = apiPort.getDataFromFile(reqData.$file, file);
+          allReqData = apiPort.resolveObject(reqDataFile);
+          delete reqData.$file;
         } else {
-          allReqData = apiPort.resolveObject(reqData)
+          allReqData = apiPort.resolveObject(reqData);
         }
 
-        const isResPrint = req.print || false
-        const save = req.save || {}
+        const isResPrint = req.print || false;
+        const save = req.save || {};
+
+        const conditions = req.conditions || false;
+        const utilConditions = _.get(conditions, 'util', false);
+        const interval = _.get(utilConditions, 'interval', 1000);
+        const limit = _.get(utilConditions, 'limit', 1);
+        const untilExpects = _.get(utilConditions, 'expect', []);
+        let res = {};
+        let isUntilConditionTrue = false;
 
         try {
-          allReqData = evaluateFaker(allReqData, fakerScopes.test)
-          if (req.before && _.isFunction(req.before)) {
-            req.before.call(req, {
-              apiPort,
-              expect,
-              specs: config.apiCalls.swagger,
-              op: operations[req.call],
-              body: allReqData,
-              basicAuth,
+          allReqData = evaluateFaker(allReqData, fakerScopes.test);
+          callBefore(apiPort, config, operations, allReqData, basicAuth, req);
+
+          if (utilConditions) {
+            tryer({
+              action(done) {
+                const scResponse = SuperClient(
+                  apiPort,
+                  req,
+                  operations[req.call],
+                  allReqData,
+                  basicAuth,
+                  true,
+                )
+                scResponse.then((response) => {
+                  res = response;
+                  res = addJsonToRes(res);
+
+                  const isJsonExpectMeet = apiPort.expectObject(res.json, untilExpects.json, true)
+                  const headersExpect = _.get(untilExpects, 'headers', false);
+                  let isHeadersExpectMeet = true;
+                  if (headersExpect) {
+                    isHeadersExpectMeet = apiPort.expectObject(res.header, headersExpect, true)
+                  }
+                  if (isJsonExpectMeet && isHeadersExpectMeet) {
+                    isUntilConditionTrue = true;
+                  }
+                  done();
+                }).catch(() => { done() });
+              },
+              pass: () => {
+                try {
+                  successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
+                  testDone();
+                } catch (err) {
+                  testDone(err);
+                }
+              },
+              until: () => isUntilConditionTrue,
+              interval,
+              limit,
             });
-          }
-          const res = await SuperClient(apiPort, req, operations[req.call], allReqData, basicAuth)
-
-          if (req.after && _.isFunction(req.after)) {
-            req.after.call(req, {
+          } else {
+            SuperClient(
               apiPort,
-              specs: config.apiCalls.swagger,
-              res,
-              expect,
-              op: operations[req.call],
-              body: allReqData,
-              error: {},
+              req,
+              operations[req.call],
+              allReqData,
               basicAuth,
+            ).then((response) => {
+              res = response;
+              res = addJsonToRes(res);
+              try {
+                successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint);
+                testDone();
+              } catch (err) {
+                testDone(err);
+              }
+            }).catch((err) => {
+              try {
+                errorRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, err, isResPrint);
+                testDone();
+              } catch (error) {
+                testDone(error);
+              }
             });
-          }
-          if (isResPrint) {
-            varDump('Response= ', res, true)
-          }
-
-          if (req.expect) {
-            verifyExpectStructure(req.expect)
-            apiPort.expectStatus(req.expect.status, res.status)
-
-            if (req.expect.text) {
-              apiPort.expectationOn(res.text, req.expect.text)
-            }
-
-            if (res.text && isJson(res.text)) {
-              res.json = JSON.parse(res.text)
-            }
-
-            if (req.expect.json) {
-              for (const expectation of req.expect.json) {
-                apiPort.expectationOn(res.json, expectation)
-              }
-            }
-
-            if (req.expect.headers) {
-              for (const expectedHeader of req.expect.headers) {
-                apiPort.expectationOn(res.header, expectedHeader)
-              }
-            }
-          }
-
-          for (const varName of Object.keys(save)) {
-            if (typeof save[varName] === 'object') {
-              const savedValue = evaluateResponseData(res, save[varName])
-              apiPort.set(varName, savedValue)
-              if (isResPrint) {
-                console.log(`${varName} = `, JSON.stringify(savedValue))
-              }
-            } else if (save[varName].startsWith('$file.')) {
-              apiPort.set(varName, apiPort.resolve(save[varName]))
-              if (isResPrint) {
-                console.log(`${varName} = `, JSON.stringify(apiPort.resolve(save[varName])))
-              }
-            } else {
-              const value = getValueFromResponse(res, save[varName])
-              apiPort.set(varName, value, false)
-              if (isResPrint) {
-                console.log(`${varName} = `, JSON.stringify(value))
-              }
-            }
           }
         } catch (err) {
-          if (req.after && _.isFunction(req.after)) {
-            req.after.call(req, {
-              apiPort,
-              specs: config.apiCalls.swagger,
-              res: {},
-              expect,
-              op: operations[req.call],
-              body: allReqData,
-              error: err,
-              basicAuth,
-            });
-          }
-          if (isResPrint) {
-            varDump('Error= ', err, true)
-          }
-          for (const varName of Object.keys(save)) {
-            if (typeof save[varName] !== 'object' && (save[varName].startsWith('$file.') || save[varName].startsWith('$config.'))) {
-              apiPort.set(varName, apiPort.resolve(save[varName]))
-              if (isResPrint) {
-                console.log(`${varName} = `, JSON.stringify(apiPort.resolve(save[varName])))
-              }
-            }
-          }
-          if ((req.expect || {}).status && err.status) {
-            apiPort.expectStatus(req.expect.status, err.status)
-          } else if ((req.expect || {}).error && err.error) {
-            apiPort.expectStatus(req.expect.error, err.error)
-          } else {
-            throw err
+          try {
+            errorRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, err, isResPrint);
+            testDone();
+          } catch (error) {
+            testDone(error);
           }
         }
-      })
-    })
-  })
-  return config
+      });
+    });
+  });
+  return config;
+};
+
+function successRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, isResPrint) {
+  callAfter(apiPort, config, operations, allReqData, basicAuth, req, res);
+  printRes(isResPrint, res);
+  assertExpect(apiPort, req, res);
+  saveResItem(apiPort, save, res, isResPrint);
+}
+
+function errorRes(apiPort, config, operations, allReqData, basicAuth, save, req, res, err, isResPrint) {
+  callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, true, err);
+  printRes(isResPrint, err, 'Error= ');
+  saveErrorResItem(apiPort, save, isResPrint);
+  assertExpectForError(apiPort, req, err);
+}
+
+function addJsonToRes(res) {
+  if (res.text && isJson(res.text)) {
+    res.json = JSON.parse(res.text);
+  }
+
+  return res;
+}
+
+function callAfter(apiPort, config, operations, allReqData, basicAuth, req, res, isError = false, err = {}) {
+  if (req.after && _.isFunction(req.after)) {
+    req.after.call(req, {
+      apiPort,
+      specs: config.apiCalls.swagger,
+      res: isError ? {} : res,
+      expect,
+      op: operations[req.call],
+      body: allReqData,
+      error: isError ? err : {},
+      basicAuth,
+    });
+  }
+}
+
+function callBefore(apiPort, config, operations, allReqData, basicAuth, req) {
+  if (req.before && _.isFunction(req.before)) {
+    req.before.call(req, {
+      apiPort,
+      expect,
+      specs: config.apiCalls.swagger,
+      op: operations[req.call],
+      body: allReqData,
+      basicAuth,
+    });
+  }
+}
+
+function printRes(isResPrint, res, text = 'Response= ') {
+  if (isResPrint) {
+    varDump(text, res, true);
+  }
+}
+
+function assertExpect(apiPort, req, res) {
+  if (req.expect) {
+    verifyExpectStructure(req.expect);
+    apiPort.expectStatus(req.expect.status, res.status);
+
+    if (req.expect.text) {
+      apiPort.expectationOn(res.text, req.expect.text);
+    }
+
+    if (req.expect.json) {
+      apiPort.expectObject(res.json, req.expect.json);
+    }
+
+    if (req.expect.headers) {
+      apiPort.expectObject(res.header, req.expect.headers);
+    }
+  }
+}
+
+function assertExpectForError(apiPort, req, err) {
+  if ((req.expect || {}).status && err.status) {
+    apiPort.expectStatus(req.expect.status, err.status);
+  } else if ((req.expect || {}).error && err.error) {
+    apiPort.expectStatus(req.expect.error, err.error);
+  } else {
+    throw err;
+  }
+}
+
+function saveResItem(apiPort, save, res, isResPrint) {
+  for (const varName of Object.keys(save)) {
+    if (typeof save[varName] === 'object') {
+      const savedValue = evaluateResponseData(res, save[varName]);
+      apiPort.set(varName, savedValue);
+      if (isResPrint) {
+        console.log(`${varName} = `, JSON.stringify(savedValue));
+      }
+    } else if (save[varName].startsWith('$file.')) {
+      apiPort.set(varName, apiPort.resolve(save[varName]));
+      if (isResPrint) {
+        console.log(
+          `${varName} = `,
+          JSON.stringify(apiPort.resolve(save[varName])),
+        );
+      }
+    } else {
+      const value = getValueFromResponse(res, save[varName]);
+      apiPort.set(varName, value, false);
+      if (isResPrint) {
+        console.log(`${varName} = `, JSON.stringify(value));
+      }
+    }
+  }
+
+  return apiPort;
+}
+
+function saveErrorResItem(apiPort, save, isResPrint) {
+  for (const varName of Object.keys(save)) {
+    if (
+      typeof save[varName] !== 'object'
+      && (save[varName].startsWith('$file.')
+        || save[varName].startsWith('$config.'))
+    ) {
+      apiPort.set(varName, apiPort.resolve(save[varName]));
+      if (isResPrint) {
+        console.log(
+          `${varName} = `,
+          JSON.stringify(apiPort.resolve(save[varName])),
+        );
+      }
+    }
+  }
+
+  return apiPort;
 }
 
 function init(file) {
-  const fileContent = loadYamlFile(file)
+  const fileContent = loadYamlFile(file);
 
-  fileContent.apiCalls = fileContent.apiCalls || {}
-  fileContent.apiCalls.swagger = fileContent.apiCalls.swagger || []
+  fileContent.apiCalls = fileContent.apiCalls || {};
+  fileContent.apiCalls.swagger = fileContent.apiCalls.swagger || [];
 
-  return fileContent
+  return fileContent;
 }
 
 function evaluateResponseData(res, save) {
-  const keys = Object.keys(save)
+  const keys = Object.keys(save);
   if (keys.length > 1) {
-    throw new Error(`Multiple keys do not support. '${JSON.stringify(save)}'`)
+    throw new Error(`Multiple keys do not support. '${JSON.stringify(save)}'`);
   }
 
-  const keyName = keys[0]
+  const keyName = keys[0];
   if (save[keyName].startsWith('$regex')) {
-    const value = getValueFromResponse(res, keyName)
+    const value = getValueFromResponse(res, keyName);
     if (!value) {
-      throw new Error(`Wrong key '${keyName}'`)
+      throw new Error(`Wrong key '${keyName}'`);
     }
-    const parts = save[keyName].split(' ')
+    const parts = save[keyName].split(' ');
     if (parts.length === 2) {
-      const matchedValue = value.match(parts[1])
+      const matchedValue = value.match(parts[1]);
       if (matchedValue) {
         if (matchedValue.length === 1) {
-          return matchedValue[0]
-        } if (matchedValue.length === 2) {
-          return matchedValue[1]
+          return matchedValue[0];
+        }
+        if (matchedValue.length === 2) {
+          return matchedValue[1];
         }
         throw new Error(
-          `Found multiple values '${matchedValue}' using regular expression '${parts[1]}'`,
-        )
+          `Found multiple values '${matchedValue}' using regular expression '${
+            parts[1]
+          }'`,
+        );
       }
-      throw new Error(`Did not parse from value '${value}' using regular expression '${parts[1]}'`)
+      throw new Error(
+        `Did not parse from value '${value}' using regular expression '${
+          parts[1]
+        }'`,
+      );
     } else {
-      throw new Error(`Wrong format: '${save[keyName]}'. Expecting like: '$regex ([a-z\\d]+)$'`)
+      throw new Error(
+        `Wrong format: '${save[keyName]}'. Expecting like: '$regex ([a-z\\d]+)$'`,
+      );
     }
   } else {
-    throw new Error('Did not find \'$regex\'. Expecting like: \'$regex ([a-z\\d]+)$\'')
+    throw new Error(
+      "Did not find '$regex'. Expecting like: '$regex ([a-z\\d]+)$'",
+    );
   }
 }
 
 function getValueFromResponse(res, key) {
   if (key.startsWith('json.')) {
-    res.json = res.json || JSON.parse(res.text)
+    res.json = res.json || JSON.parse(res.text);
   }
 
-  return objectPath.get(res, key)
+  return objectPath.get(res, key);
 }
 
-function varDump(name, obj, isStr) {
-  if (isStr) {
-    console.log(name, JSON.stringify(obj, null, 2))
+function varDump(name, obj, printAsString = false) {
+  if (printAsString) {
+    console.log(name, JSON.stringify(obj, null, 2));
   } else {
-    console.log(name, obj)
+    console.log(name, obj);
   }
 }
 
@@ -277,18 +403,20 @@ function verifyExpectStructure(callExpects) {
   // therefore, make sure that the keys in the expect object are
   // ones that are processed. Any that fall outside this list will cause
   // the test to fail
-  const expectKeys = Array.from(Object.keys(callExpects))
-  const unknownKeys = _.difference(expectKeys, processedExpectations)
+  const expectKeys = Array.from(Object.keys(callExpects));
+  const unknownKeys = _.difference(expectKeys, processedExpectations);
   if (unknownKeys.length > 0) {
     throw new Error(
       `Only certain expectations are processed - unknown ones have been detected: ${_.join(
         unknownKeys,
       )}`,
-    )
+    );
   }
   // now make sure the processed keys are what we exepct
   if (callExpects.json && !Array.isArray(callExpects.json)) {
-    throw new Error(`json must be an array of expectations. Found: ${typeof callExpects.json}`)
+    throw new Error(
+      `json must be an array of expectations. Found: ${typeof callExpects.json}`,
+    );
   }
 }
 

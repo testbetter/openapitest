@@ -4,6 +4,13 @@ apiCalls:
   # get all employees endpoint: /employees
   - name : get all employees
     call : get_employees
+    conditions:
+      util: 
+        expect:
+          json:
+            - status: to.be.eql complete
+        interval: 5000
+        limit: 10
     expect:
       status: 200
       json:
