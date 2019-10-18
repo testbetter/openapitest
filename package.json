@@ -1,6 +1,6 @@
 {
   "name": "openapitest",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -16,15 +16,14 @@
     "openapitest": "./bin/openapitest.js"
   },
   "repository": {
-    "type" : "git",
-    "url" : "git+https://github.com/testbetter/openapitest.git"
+    "type": "git",
+    "url": "git+https://github.com/testbetter/openapitest.git"
   },
   "keywords": [
     "operapi",
     "swagger",
     "integration test"
   ],
-  "author": "Test Better",
   "author": {
     "name": "Test Better",
     "email": "testbetter100@gmail.com"
