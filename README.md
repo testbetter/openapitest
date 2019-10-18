@@ -104,6 +104,7 @@ We have 3 types of config support here:
 			* [$file](#dataFile)
 		* [basicAuth](#basicAuth)
 			* [$file](#basicAuthFile)
+		* [conditions](#conditions)
 		* [save](#save)
 		* [print](#print)
 		* [only](#only)
@@ -244,6 +245,27 @@ module.exports = {
   "password": "123"
 }
 ```
+<br />
+
+**<a name='conditions'>`conditions:`</a>**
+If we want to give any condition for response/ result value then we can do that by using `conditions` tag. Example:
+```sh
+conditions:
+  util: 
+    expect:
+      json:
+        - status: to.be.eql complete
+      headers:
+        - server: to.be.eql nginx 
+      interval: 5000
+      limit: 10    
+```
+Here we added `until` condition. This endpoint will be called until `status` is `complete` and `server` is `nginx`. We can set condition for json response and headers.
+
+`limit`: Failure limit, representing the maximum number of falsey returns from result or response that will be permitted before invocation is deemed to have failed. A negative number indicates that the attempt should never fail, instead continuing for as long as result or response have returned truthy values.
+
+`interval`: The retry interval, in milliseconds. A negative number indicates that each subsequent retry should wait for twice the interval from the preceding iteration (i.e. exponential backoff). The default value is -1000, signifying that the initial retry interval should be one second and that each subsequent attempt should wait for double the length of the previous interval.
+
 <br />
 
 **<a name='print'>`print:`</a>**

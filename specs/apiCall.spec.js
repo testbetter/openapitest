@@ -75,6 +75,12 @@ describe('apiCall', () => {
       sinon.assert.calledWith(fakeIt, 'Login - success - 3')
     })
 
+    it('Should call the method until status is ENABLED', () => {
+      const fakeIt = sinon.spy()
+      ApiCall('./fixtures/fixture.until.spec.yaml', apiPort, fakeIt);
+      sinon.assert.calledWith(fakeIt, 'Login unit condition check - success')
+    })
+
     it('Should call the only method if the only tag is present', () => {
       const fakeOnly = sinon.spy()
       const fakeSkip = sinon.spy()
