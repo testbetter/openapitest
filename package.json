@@ -15,12 +15,23 @@
   "bin": {
     "openapitest": "./bin/openapitest.js"
   },
+  "repository": {
+    "type" : "git",
+    "url" : "git+https://github.com/testbetter/openapitest.git"
+  },
   "keywords": [
     "operapi",
     "swagger",
     "integration test"
   ],
   "author": "Test Better",
+  "author": {
+    "name": "Test Better",
+    "email": "testbetter100@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/lodash/lodash/issues"
+  },
   "license": "MIT",
   "dependencies": {
     "chai": "^4.2.0",
