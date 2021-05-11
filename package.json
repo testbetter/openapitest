@@ -16,15 +16,14 @@
     "openapitest": "./bin/openapitest.js"
   },
   "repository": {
-    "type" : "git",
-    "url" : "git+https://github.com/testbetter/openapitest.git"
+    "type": "git",
+    "url": "git+https://github.com/testbetter/openapitest.git"
   },
   "keywords": [
     "operapi",
     "swagger",
     "integration test"
   ],
-  "author": "Test Better",
   "author": {
     "name": "Test Better",
     "email": "testbetter100@gmail.com"
@@ -34,27 +33,27 @@
   },
   "license": "MIT",
   "dependencies": {
-    "chai": "^4.2.0",
+    "chai": "^4.3.4",
     "colors": "^1.4.0",
-    "commander": "^2.20.1",
+    "commander": "^7.2.0",
     "expect.js": "^0.3.1",
-    "faker": "^4.1.0",
-    "js-yaml": "^3.13.1",
-    "jsonpath": "^1.0.0",
+    "faker": "^5.5.3",
+    "js-yaml": "^4.1.0",
+    "jsonpath": "^1.1.1",
     "klaw-sync": "^6.0.0",
-    "lodash": "^4.17.14",
-    "mocha": "^5.2.0",
-    "mochawesome": "^3.1.2",
-    "object-path": "^0.11.3",
-    "object-values": "^1.0.0",
-    "shelljs": "^0.8.3",
-    "superagent": "^4.1.0",
+    "lodash": "^4.17.21",
+    "mocha": "^8.4.0",
+    "mochawesome": "^6.2.2",
+    "object-path": "^0.11.5",
+    "object-values": "^2.0.0",
+    "shelljs": "^0.8.4",
+    "superagent": "^6.1.0",
     "tryer": "^1.0.1"
   },
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb-base": "^13.2.0",
-    "eslint-plugin-import": "^2.18.2",
-    "sinon": "^7.5.0"
+    "eslint": "^7.26.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "sinon": "^10.0.0"
   }
 }
