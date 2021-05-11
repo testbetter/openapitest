@@ -27,8 +27,15 @@ module.exports = async function superClient(
   } else if (basicAuth) {
     suObj = suObj.auth(basicAuth.username || '', basicAuth.password || '');
   }
-  return suObj
-    .set(req.header || '')
-    .send(data)
-    .sortQuery();
+
+  suObj.set(req.header || '');
+
+  // Only set data if data has some value, so that content-length is zero
+  if (data && data !== 'null' && Object.keys(data).length > 0) {
+    suObj.send(data);
+  }
+
+  suObj.sortQuery();
+
+  return suObj;
 };
