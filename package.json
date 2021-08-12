@@ -1,6 +1,6 @@
 {
   "name": "openapitest",
-  "version": "3.2.2",
+  "version": "4.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -48,6 +48,7 @@
     "object-values": "^2.0.0",
     "shelljs": "^0.8.4",
     "superagent": "^6.1.0",
+    "superagent-proxy": "^2.1.0",
     "tryer": "^1.0.1"
   },
   "devDependencies": {
