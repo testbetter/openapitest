@@ -67,6 +67,7 @@ Options:
   -g, --globalConfig [path]  Global Test data config folder relative/ absolute path.  e.g: <path>/global-config
   -u, --url [url]          Server URL. e.g: http://localhost:9000
   -r, --report <n>         Will generate the html report or not. Default 0; e.g: 1 or 0
+  -p, --proxy [proxy]      The Proxy URL, e.g: http://127.0.0.1:8080
   -h, --help               output usage information
 ```
 
