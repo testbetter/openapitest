@@ -1,6 +1,6 @@
 {
   "name": "openapitest",
-  "version": "4.0",
+  "version": "3.3",
   "description": "",
   "main": "src/index.js",
   "scripts": {
