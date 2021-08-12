@@ -35,6 +35,7 @@ program
         parseInt
     )
     .option('-u, --url [url]', 'Server URL. e.g: http://localhost:9000')
+    .option('-p, --proxy [proxy]', 'Proxy URL. e.g: http://127.0.0.1:8080')
 
 program.parse(process.argv)
 
@@ -70,6 +71,10 @@ if (program.globalConfig) {
 if (program.dataConfig) {
     checkExists(program.dataConfig, 'Common config directory')
     process.env.COMMON_DATA_CONFIG = program.dataConfig
+}
+
+if (program.proxy) {
+    process.env.PROXYURL = program.proxy;
 }
 
 process.env.API_SERVER_URL = program.url
