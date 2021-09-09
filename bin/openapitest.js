@@ -88,7 +88,8 @@ if(program.report) {
         overwrite: true,
         charts: true,
         code: false,
-        quiet: true
+        quiet: true,
+        inline: true
     }
 }
 
