@@ -16,15 +16,14 @@
     "openapitest": "./bin/openapitest.js"
   },
   "repository": {
-    "type" : "git",
-    "url" : "git+https://github.com/testbetter/openapitest.git"
+    "type": "git",
+    "url": "git+https://github.com/testbetter/openapitest.git"
   },
   "keywords": [
     "operapi",
     "swagger",
     "integration test"
   ],
-  "author": "Test Better",
   "author": {
     "name": "Test Better",
     "email": "testbetter100@gmail.com"
@@ -44,6 +43,8 @@
     "klaw-sync": "^6.0.0",
     "lodash": "^4.17.14",
     "mocha": "^5.2.0",
+    "mocha-junit-reporter": "^2.0.0",
+    "mocha-multi-reporters": "^1.5.1",
     "mochawesome": "^3.1.2",
     "object-path": "^0.11.3",
     "object-values": "^1.0.0",
