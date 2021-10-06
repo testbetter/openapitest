@@ -76,14 +76,24 @@ process.env.API_SERVER_URL = program.url
 
 let options = {}
 if(program.report) {
-    options.reporter = 'mochawesome'
+    options.reporter = 'mocha-multi-reporters'
     options.reporterOptions = {
-        reportDir: 'reports',
-        reportFilename: 'test-int-report',
-        overwrite: true,
-        charts: true,
-        code: false,
-        quiet: true
+        reporterEnabled: "mocha-junit-reporter, mochawesome",
+        mochaJunitReporterReporterOptions: {
+          mochaFile: "reports/junit/results-[hash].xml",
+          includePending: true,
+          jenkinsMode: true
+        },
+        mochawesomeReporterOptions: {
+          reportDir: "reports",
+          reportFilename: "test-int-report",
+          html: false,
+          json: true,
+          overwrite: true,
+          charts: true,
+          code: false,
+          quiet: true
+        }
     }
 }
 
