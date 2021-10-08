@@ -34,11 +34,6 @@ program
         'Will generate the html report or not.  e.g: 1 or 0',
         parseInt
     )
-      .option(
-        '-i, --inline-report-assets <n>',
-        'Inline assets in generated HTML report.',
-        parseInt
-      )
     .option('-u, --url [url]', 'Server URL. e.g: http://localhost:9000')
     .option('-p, --proxy [proxy]', 'Proxy URL. e.g: http://127.0.0.1:8080')
 
@@ -82,11 +77,6 @@ if (program.proxy) {
     process.env.PROXYURL = program.proxy;
 }
 
-let inlineReportAssets = false;
-if (program.inlineReportAssets) {
-  inlineReportAssets = true;
-}
-
 process.env.API_SERVER_URL = program.url
 
 let options = {}
@@ -99,7 +89,7 @@ if(program.report) {
         charts: true,
         code: false,
         quiet: true,
-        inline: inlineReportAssets
+        inline: true
     }
 }
 
