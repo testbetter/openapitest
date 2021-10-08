@@ -3,7 +3,7 @@ const klawSync = require('klaw-sync');
 const ApiPort = require('./apiPort');
 const apiCall = require('./apiCall');
 const apiTest = require('./apiTests');
-const { loadYamlFile } = require('./util.js');
+const { loadYamlFile } = require('./util');
 
 const apiPort = new ApiPort();
 apiPort.init();

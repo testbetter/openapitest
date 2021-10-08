@@ -5,7 +5,7 @@ const expect = require('expect.js');
 const fs = require('fs');
 const path = require('path');
 const klawSync = require('klaw-sync');
-const { loadFile, YamlParsingError } = require('./util.js');
+const { loadFile, YamlParsingError } = require('./util');
 
 const currentDir = process.cwd();
 
@@ -174,7 +174,7 @@ class ApiPort {
   }
 
   remove() {
-    this.keys.forEach(key => { delete this.apiPort[key] });
+    this.keys.forEach((key) => delete this.apiPort[key]);
   }
 
   set(key, value, required = true) {

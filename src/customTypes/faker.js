@@ -87,7 +87,7 @@ function evaluateFaker(data, scope) {
   }
 
   if (isObject(data)) {
-    return mapValues(data, value => { (isObject(value) ? evaluateFaker(value, scope) : value) })
+    return mapValues(data, (value) => (isObject(value) ? evaluateFaker(value, scope) : value))
   }
   return data
 }
