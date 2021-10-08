@@ -54,7 +54,6 @@ describe('apiCall', () => {
       })
     })
 
-
     it('Should evaluate global fake data', () => {
       const apiCallConfig = new ApiCall('./fixtures/fixture.spec.yaml', apiPort);
       const apiCall = first(apiCallConfig.apiCalls.swagger)
@@ -64,7 +63,6 @@ describe('apiCall', () => {
 
       expect(body.password).not.to.be.a('string')
     })
-
 
     it('Should repeat the file if the repeat tag is present change the it text', () => {
       const fakeIt = sinon.spy()

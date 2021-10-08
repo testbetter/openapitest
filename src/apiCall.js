@@ -38,7 +38,7 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
 
   _.forEach(paths, (actions, route) => {
     _.forEach(actions, (details, action) => {
-      operationIds[details.operationId] = Object.assign({}, remainingSpec, {
+      operationIds[details.operationId] = Object.assign( ...remainingSpec, {
         paths: {
           [route]: {
             [action]: details,
