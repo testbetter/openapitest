@@ -14,9 +14,9 @@ const {
   evaluateFaker,
   fakerScopes,
   FAKER_SCHEMA
-} = require('./customTypes/faker');
+} = require('./customTypes/faker.js');
 
-const isObj = (value) => (isObject(value) && !isFunction(value));
+const isObj = value => isObject(value) && !isFunction(value);
 
 const KEYS_TO_IGNORE = ['before', 'after'];
 
