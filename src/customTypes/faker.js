@@ -66,6 +66,7 @@ const FakerClassTypeScalar = new YAML.Type('!faker', {
   represent,
 });
 
+
 const FAKER_SCHEMA = YAML.Schema.create([FakerClassType, FakerClassTypeScalar])
 
 function isFaker(data) {
@@ -87,7 +88,7 @@ function evaluateFaker(data, scope) {
   }
 
   if (isObject(data)) {
-    return mapValues(data, value => { (isObject(value) ? evaluateFaker(value, scope) : value) })
+    return mapValues(data, value => (isObject(value) ? evaluateFaker(value, scope) : value))
   }
   return data
 }
