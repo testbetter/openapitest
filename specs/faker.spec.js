@@ -1,7 +1,7 @@
 const {
   expect,
 } = require('chai')
-const { FakerClass, fakerScopes } = require('../src/customTypes/faker')
+const { FakerClass, fakerScopes } = require('../src/customTypes/faker.js')
 
 describe('FakerClass', () => {
   it('should evaluate faker API', () => {

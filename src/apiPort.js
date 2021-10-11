@@ -174,7 +174,7 @@ class ApiPort {
   }
 
   remove() {
-    this.keys.forEach(key => delete this.apiPort[key]);
+    this.keys.forEach(key => { delete this.apiPort[key] });
   }
 
   set(key, value, required = true) {

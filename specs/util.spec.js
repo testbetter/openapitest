@@ -2,7 +2,7 @@ const {
   expect,
 } = require('chai')
 const path = require('path')
-const util = require('../src/util')
+const util = require('../src/util.js')
 
 describe('util', () => {
   describe('evaluateData', () => {

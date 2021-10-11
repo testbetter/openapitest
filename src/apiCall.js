@@ -4,8 +4,8 @@ const objectPath = require('object-path');
 const { expect } = require('chai');
 
 const tryer = require('tryer');
-const { loadYamlFile } = require('./util.js');
-const { evaluateFaker, fakerScopes } = require('./customTypes/faker.js');
+const { loadYamlFile } = require('./util');
+const { evaluateFaker, fakerScopes } = require('./customTypes/faker');
 const SuperClient = require('./superClient');
 
 const processedExpectations = ['status', 'json', 'headers', 'error'];
@@ -38,7 +38,7 @@ module.exports = function apiCall(file, apiPort, itApi = it) {
 
   _.forEach(paths, (actions, route) => {
     _.forEach(actions, (details, action) => {
-      operationIds[details.operationId] = Object.assign({}, remainingSpec, {
+      operationIds[details.operationId] = Object.assign( ...remainingSpec, {
         paths: {
           [route]: {
             [action]: details,

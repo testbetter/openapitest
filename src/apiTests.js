@@ -1,4 +1,4 @@
-const { loadYamlFile } = require('./util');
+const { loadYamlFile } = require('./util.js');
 
 module.exports = function tests(file, apiPort) {
   const config = init(file);
