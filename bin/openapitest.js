@@ -34,6 +34,7 @@ program
         'Will generate the html report or not.  e.g: 1 or 0',
         parseInt
     )
+    .option('-a, --tag [tag]', 'Comma seperated tags to run the test, leave empty to run all')
     .option('-u, --url [url]', 'Server URL. e.g: http://localhost:9000')
     .option('-p, --proxy [proxy]', 'Proxy URL. e.g: http://127.0.0.1:8080')
 
@@ -78,6 +79,9 @@ if (program.proxy) {
 }
 
 process.env.API_SERVER_URL = program.url
+if (program.tag) {
+    process.env.TAGS = program.tag
+}
 
 let options = {}
 if(program.report) {
