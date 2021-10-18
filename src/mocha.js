@@ -35,7 +35,7 @@ if (apiPort.get('API_TESTS_PATH')) {
             let tagMatched = false;
             for (const tagInArgs of tagsArray) {
               for (const tagInTest of tagsInTest) {
-                if (tagInArgs === tagInTest) {
+                if (`${tagInArgs}` === `${tagInTest}`) {
                   tagMatched = true;
                   break;
                 }
