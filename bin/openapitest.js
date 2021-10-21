@@ -59,6 +59,8 @@ if (program.dataDir) {
     process.env.TEST_DATA_PATH = program.testDir
 }
 
+console.log('#################################################################');
+
 if (program.sharedir) {
     checkExists(program.sharedir, 'Common test data directory')
     process.env.SHARED_TEST_DATA = program.sharedir
@@ -96,7 +98,7 @@ if(program.report) {
         mochawesomeReporterOptions: {
             reportDir: "reports",
             reportFilename: "openapitest-report",
-            html: false,
+            html: true,
             json: true,
             overwrite: true,
             charts: true,
