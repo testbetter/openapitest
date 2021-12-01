@@ -66,6 +66,7 @@ Options:
   -r, --report <n>         Will generate the html report or not. Default 0; e.g: 1 or 0
   -p, --proxy [proxy]      The Proxy URL, e.g: http://127.0.0.1:8080
   -a, --tag [tag]          Comma seperated tags to run the test, leave empty to run all
+  -m, --reportName [name]  The name of mochawesome report file
   -h, --help               output usage information
 ```
 

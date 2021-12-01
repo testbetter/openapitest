@@ -37,6 +37,7 @@ program
     .option('-a, --tag [tag]', 'Comma seperated tags to run the test, leave empty to run all')
     .option('-u, --url [url]', 'Server URL. e.g: http://localhost:9000')
     .option('-p, --proxy [proxy]', 'Proxy URL. e.g: http://127.0.0.1:8080')
+    .option('-m, --reportName [name]', 'The name of mochawesome report file')
 
 program.parse(process.argv)
 
@@ -58,8 +59,6 @@ if (program.dataDir) {
 } else {
     process.env.TEST_DATA_PATH = program.testDir
 }
-
-console.log('#################################################################');
 
 if (program.sharedir) {
     checkExists(program.sharedir, 'Common test data directory')
@@ -85,6 +84,11 @@ if (program.tag) {
     process.env.TAGS = program.tag
 }
 
+let reportName = "openapitest-report";
+if (program.reportName) {
+    reportName = program.reportName;
+}
+
 let options = {}
 if(program.report) {
     options.reporter = 'mocha-multi-reporters'
@@ -97,7 +101,7 @@ if(program.report) {
         },
         mochawesomeReporterOptions: {
             reportDir: "reports",
-            reportFilename: "openapitest-report",
+            reportFilename: reportName,
             html: true,
             json: true,
             overwrite: true,
