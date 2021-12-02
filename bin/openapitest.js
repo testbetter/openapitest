@@ -100,7 +100,7 @@ if(program.report) {
             jenkinsMode: true
         },
         mochawesomeReporterOptions: {
-            reportDir: "reports",
+            reportDir: "reports/mochawesome",
             reportFilename: reportName,
             html: true,
             json: true,
