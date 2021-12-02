@@ -1,6 +1,9 @@
 /* eslint-disable comma-dangle */
 const _ = require('lodash');
 const request = require('superagent');
+require('superagent-proxy')(request);
+
+const proxy = process.env.PROXYURL || null;
 
 module.exports = async function superClient(
   apiPort,
@@ -27,8 +30,19 @@ module.exports = async function superClient(
   } else if (basicAuth) {
     suObj = suObj.auth(basicAuth.username || '', basicAuth.password || '');
   }
-  return suObj
-    .set(req.header || '')
-    .send(data)
-    .sortQuery();
+
+  suObj.set(req.header || '');
+
+  if (proxy) {
+    suObj.proxy(proxy);
+  }
+
+  // Only set data if data has some value, so that content-length is zero
+  if (data && data !== 'null' && Object.keys(data).length > 0) {
+    suObj.send(data);
+  }
+
+  suObj.sortQuery();
+
+  return suObj;
 };

@@ -2,9 +2,6 @@
 
 The purpose of this openapitest framework is to simplify authoring, organizing, executing, and reporting result of API tests using API specification. It runs on node.js and distributed via npm. Add this module to your node.js project as a development dependency and start writing API or Integration tests using YAML language.
 
-
-[![Build Status](https://travis-ci.org/testbetter/openapitest.svg?branch=master)](https://travis-ci.org/testbetter/openapitest)
-
 ### Installation
 ----
 ```npm install --save-dev openapitest```
@@ -67,6 +64,9 @@ Options:
   -g, --globalConfig [path]  Global Test data config folder relative/ absolute path.  e.g: <path>/global-config
   -u, --url [url]          Server URL. e.g: http://localhost:9000
   -r, --report <n>         Will generate the html report or not. Default 0; e.g: 1 or 0
+  -p, --proxy [proxy]      The Proxy URL, e.g: http://127.0.0.1:8080
+  -a, --tag [tag]          Comma seperated tags to run the test, leave empty to run all
+  -m, --reportName [name]  The name of mochawesome report file
   -h, --help               output usage information
 ```
 

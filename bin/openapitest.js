@@ -34,7 +34,10 @@ program
         'Will generate the html report or not.  e.g: 1 or 0',
         parseInt
     )
+    .option('-a, --tag [tag]', 'Comma seperated tags to run the test, leave empty to run all')
     .option('-u, --url [url]', 'Server URL. e.g: http://localhost:9000')
+    .option('-p, --proxy [proxy]', 'Proxy URL. e.g: http://127.0.0.1:8080')
+    .option('-m, --reportName [name]', 'The name of mochawesome report file')
 
 program.parse(process.argv)
 
@@ -72,18 +75,41 @@ if (program.dataConfig) {
     process.env.COMMON_DATA_CONFIG = program.dataConfig
 }
 
+if (program.proxy) {
+    process.env.PROXYURL = program.proxy;
+}
+
 process.env.API_SERVER_URL = program.url
+if (program.tag) {
+    process.env.TAGS = program.tag
+}
+
+let reportName = "openapitest-report";
+if (program.reportName) {
+    reportName = program.reportName;
+}
 
 let options = {}
 if(program.report) {
-    options.reporter = 'mochawesome'
+    options.reporter = 'mocha-multi-reporters'
     options.reporterOptions = {
-        reportDir: 'reports',
-        reportFilename: 'test-int-report',
-        overwrite: true,
-        charts: true,
-        code: false,
-        quiet: true
+        reporterEnabled: "mocha-junit-reporter, mochawesome",
+        mochaJunitReporterReporterOptions: {
+            mochaFile: "reports/junit/results-[hash].xml",
+            includePending: true,
+            jenkinsMode: true
+        },
+        mochawesomeReporterOptions: {
+            reportDir: "reports/mochawesome",
+            reportFilename: reportName,
+            html: true,
+            json: true,
+            overwrite: true,
+            charts: true,
+            code: false,
+            quiet: true,
+            inline: true
+        }
     }
 }
 
